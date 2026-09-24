@@ -6,11 +6,8 @@ export default function UserTable({ users, onDelete, currentUserId }) {
           <thead className="bg-gray-50 text-sm text-gray-500">
             <tr>
               <th className="px-5 py-4">Nombre</th>
-
               <th className="px-5 py-4">Usuario</th>
-
               <th className="px-5 py-4">Rol</th>
-
               <th className="px-5 py-4 text-right">Acciones</th>
             </tr>
           </thead>

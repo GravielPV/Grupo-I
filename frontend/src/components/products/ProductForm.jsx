@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Button from "../common/Button";
+import { PRODUCT_CATEGORIES } from "../../constants/categories";
 
 export default function ProductForm({
   initialData = {},
@@ -144,13 +145,11 @@ export default function ProductForm({
           >
             <option value="">Seleccionar categoría</option>
 
-            <option value="Analgésico">Analgésico</option>
-
-            <option value="Antiinflamatorio">Antiinflamatorio</option>
-
-            <option value="Antibiótico">Antibiótico</option>
-
-            <option value="Antialérgico">Antialérgico</option>
+            {PRODUCT_CATEGORIES.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
           </select>
 
           {errors.category && (
@@ -204,7 +203,6 @@ export default function ProductForm({
                 : "border-gray-300 focus:border-blue-500 focus:ring-blue-100"
             }`}
           />
-
           {errors.stock && (
             <p className="mt-1 text-sm text-red-600">{errors.stock}</p>
           )}

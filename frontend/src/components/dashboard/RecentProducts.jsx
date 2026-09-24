@@ -4,9 +4,7 @@ import { formatCurrency } from "../../utils/formatCurrency";
 import { formatDate } from "../../utils/formatDate";
 
 export default function RecentProducts({ products }) {
-  const recentProducts = [...products]
-    .reverse()
-    .slice(0, 5)
+  const recentProducts = [...products].reverse().slice(0, 5);
 
   return (
     <div className="mt-6 overflow-hidden rounded-xl border bg-white shadow-sm">
@@ -32,13 +30,9 @@ export default function RecentProducts({ products }) {
           <thead className="bg-gray-50 text-sm text-gray-500">
             <tr>
               <th className="px-5 py-3">Producto</th>
-
               <th className="px-5 py-3">Categoría</th>
-
               <th className="px-5 py-3">Stock</th>
-
               <th className="px-5 py-3">Precio</th>
-
               <th className="px-5 py-3">Vencimiento</th>
             </tr>
           </thead>
@@ -59,17 +53,13 @@ export default function RecentProducts({ products }) {
                   <td className="px-5 py-4 font-medium text-gray-800">
                     {product.name}
                   </td>
-
                   <td className="px-5 py-4 text-gray-500">
                     {product.category}
                   </td>
-
                   <td className="px-5 py-4 text-gray-500">{product.stock}</td>
-
                   <td className="px-5 py-4 text-gray-500">
                     {formatCurrency(product.price)}
                   </td>
-
                   <td className="px-5 py-4 text-gray-500">
                     {formatDate(product.expirationDate)}
                   </td>

@@ -21,7 +21,7 @@ export default function MainLayout() {
 
       <main className="lg:ml-64">
         <Header onMenuClick={openSidebar} />
-
+        
         <section className="p-4 sm:p-6">
           <Outlet />
         </section>

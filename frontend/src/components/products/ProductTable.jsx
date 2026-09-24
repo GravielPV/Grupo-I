@@ -14,15 +14,10 @@ export default function ProductTable({ products, onDelete, canManage }) {
           <thead className="bg-gray-50 text-sm text-gray-500">
             <tr>
               <th className="px-5 py-4">Producto</th>
-
               <th className="px-5 py-4">Categoría</th>
-
               <th className="px-5 py-4">Precio</th>
-
               <th className="px-5 py-4">Stock</th>
-
               <th className="px-5 py-4">Vencimiento</th>
-
               {canManage && <th className="px-5 py-4 text-right">Acciones</th>}
             </tr>
           </thead>

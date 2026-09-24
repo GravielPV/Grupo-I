@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import useAuth from "../context/useAuth";
 
 export default function Login() {
   const { login, isAuthenticated } = useAuth();
@@ -112,9 +112,7 @@ export default function Login() {
 
         <div className="mt-5 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-700">
           <p className="font-medium">Usuarios de prueba</p>
-
           <p className="mt-1">Admin: admin / 123456</p>
-
           <p>Empleado: empleado / 123456</p>
         </div>
       </div>

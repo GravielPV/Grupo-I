@@ -1,5 +1,7 @@
 import { NavLink } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+
+import useAuth from "../../context/useAuth";
+import { ROLES, ROLE_LABELS } from "../../constants/roles";
 
 export default function Sidebar({ isOpen, onClose }) {
   const { user, logout } = useAuth();
@@ -51,7 +53,7 @@ export default function Sidebar({ isOpen, onClose }) {
             Inventario
           </NavLink>
 
-          {user?.role === "admin" && (
+          {user?.role === ROLES.ADMIN && (
             <NavLink
               to="/users"
               onClick={onClose}
@@ -66,9 +68,7 @@ export default function Sidebar({ isOpen, onClose }) {
           <div className="mb-3">
             <p className="font-medium text-gray-800">{user?.name}</p>
 
-            <p className="text-sm text-gray-500">
-              {user?.role === "admin" ? "Administrador" : "Empleado"}
-            </p>
+            <p className="text-sm text-gray-500">{ROLE_LABELS[user?.role]}</p>
           </div>
 
           <button

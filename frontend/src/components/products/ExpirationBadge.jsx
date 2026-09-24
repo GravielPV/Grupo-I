@@ -1,4 +1,5 @@
 import { getDaysUntilExpiration } from "../../utils/expiration";
+import { EXPIRATION_WARNING_DAYS } from "../../constants/inventory";
 
 export default function ExpirationBadge({ expirationDate }) {
   const daysRemaining = getDaysUntilExpiration(expirationDate);
@@ -11,7 +12,7 @@ export default function ExpirationBadge({ expirationDate }) {
     );
   }
 
-  if (daysRemaining <= 30) {
+  if (daysRemaining <= EXPIRATION_WARNING_DAYS) {
     return (
       <span className="w-fit rounded-full bg-yellow-50 px-3 py-1 text-xs font-medium text-yellow-600">
         Próximo a vencer

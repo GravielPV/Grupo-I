@@ -14,6 +14,8 @@ import ProtectedRoute from "./ProtectedRoute";
 import RoleRoute from "./RoleRoute";
 import PublicRoute from "./PublicRoute";
 
+import { ROLES } from "../constants/roles";
+
 export default function AppRouter() {
   return (
     <BrowserRouter>
@@ -31,7 +33,7 @@ export default function AppRouter() {
 
             {/* Ruta de administrador */}
 
-            <Route element={<RoleRoute roles={["admin"]} />}>
+            <Route element={<RoleRoute roles={[ROLES.ADMIN]} />}>
               <Route path="products/new" element={<AddProduct />} />
 
               <Route path="products/edit/:id" element={<EditProduct />} />

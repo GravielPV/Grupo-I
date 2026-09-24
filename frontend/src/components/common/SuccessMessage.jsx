@@ -4,7 +4,8 @@ export default function SuccessMessage({ message, onClose }) {
   }
 
   return (
-    <div className="flex items-center justify-between gap-4 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+    <div className="flex items-center justify-between gap-4 rounded-lg border border-green-200
+     bg-green-50 p-4 text-sm text-green-700">
       <div className="flex items-center gap-2">
         <span className="font-bold">✓</span>
 

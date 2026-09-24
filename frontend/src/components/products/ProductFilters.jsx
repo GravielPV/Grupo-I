@@ -1,3 +1,5 @@
+import { PRODUCT_CATEGORIES } from "../../constants/categories";
+
 export default function ProductFilters({
   search,
   setSearch,
@@ -11,7 +13,8 @@ export default function ProductFilters({
         placeholder="Buscar producto..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 md:max-w-md"
+        className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition
+         focus:border-blue-500 focus:ring-2 focus:ring-blue-100 md:max-w-md"
       />
       <select
         value={category}
@@ -20,13 +23,11 @@ export default function ProductFilters({
       >
         <option value="">Todas las categorías</option>
 
-        <option value="Analgésico">Analgésico</option>
-
-        <option value="Antiinflamatorio">Antiinflamatorio</option>
-
-        <option value="Antibiótico">Antibiótico</option>
-
-        <option value="Antialérgico">Antialérgico</option>
+        {PRODUCT_CATEGORIES.map((category) => (
+          <option key={category} value={category}>
+            {category}
+          </option>
+        ))}
       </select>
     </div>
   );

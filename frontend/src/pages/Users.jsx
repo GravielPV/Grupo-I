@@ -4,7 +4,7 @@ import UserTable from "../components/users/UserTable";
 import UserForm from "../components/users/UserForm";
 import Modal from "../components/common/Modal";
 import Button from "../components/common/Button";
-import { useAuth } from "../context/AuthContext";
+import useAuth from "../context/useAuth";
 import SuccessMessage from "../components/common/SuccessMessage";
 
 import { getUsers, createUser, deleteUser } from "../services/userService";
@@ -23,6 +23,21 @@ export default function Users() {
   const { user: currentUser } = useAuth();
 
   useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        setError("");
+
+        const response = await getUsers();
+
+        setUsers(response.data);
+      } catch (error) {
+        console.error(error);
+
+        setError("No se pudieron cargar los usuarios.");
+      } finally {
+        setLoading(false);
+      }
+    };
     loadUsers();
   }, []);
 
@@ -39,22 +54,6 @@ export default function Users() {
       clearTimeout(timer);
     };
   }, [success]);
-
-  const loadUsers = async () => {
-    try {
-      setError("");
-
-      const response = await getUsers();
-
-      setUsers(response.data);
-    } catch (error) {
-      console.error(error);
-
-      setError("No se pudieron cargar los usuarios.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCreate = async (formData) => {
     try {

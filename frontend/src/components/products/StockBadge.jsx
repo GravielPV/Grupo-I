@@ -1,3 +1,5 @@
+import { LOW_STOCK_LIMIT } from "../../constants/inventory";
+
 export default function StockBadge({ stock }) {
   if (stock === 0) {
     return (
@@ -7,7 +9,7 @@ export default function StockBadge({ stock }) {
     );
   }
 
-  if (stock <= 5) {
+  if (stock <= LOW_STOCK_LIMIT) {
     return (
       <span className="rounded-full bg-yellow-50 px-3 py-1 text-xs font-medium text-yellow-600">
         Stock bajo

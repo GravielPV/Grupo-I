@@ -107,7 +107,6 @@ export default function UserForm({ onSubmit, loading = false }) {
             onChange={handleChange}
             className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
           />
-
           {errors.username && (
             <p className="mt-1 text-sm text-red-600">{errors.username}</p>
           )}
@@ -143,7 +142,6 @@ export default function UserForm({ onSubmit, loading = false }) {
             className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
           >
             <option value="employee">Empleado</option>
-
             <option value="admin">Administrador</option>
           </select>
 

@@ -15,25 +15,30 @@ export default function EditProduct() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    const loadProduct = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await getProductById(id);
+        setProduct(response.data);        
+
+        const productData = response.data;
+
+        setProduct({
+          ...productData,
+          expirationDate: productData.expirationDate?.split("T")[0] || "",
+        });
+      } catch (error) {
+        console.error(error);
+
+        setError("No se pudo cargar el producto.");
+      } finally {
+        setLoading(false);
+      }
+    };
     loadProduct();
   }, [id]);
-
-  const loadProduct = async () => {
-    try {
-      setLoading(true);
-      setError("");
-
-      const response = await getProductById(id);
-
-      setProduct(response.data);
-    } catch (error) {
-      console.error(error);
-
-      setError("No se pudo cargar el producto.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSubmit = async (formData) => {
     try {

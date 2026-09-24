@@ -21,9 +21,8 @@ export default function Modal({ isOpen, onClose, title, children, footer }) {
             onClick={onClose}
             className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
             aria-label="Cerrar"
-          >
-            ✕
-          </button>
+          >✕</button>
+          
         </div>
 
         {/* Contenido */}

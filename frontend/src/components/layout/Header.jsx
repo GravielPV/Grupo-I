@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import useAuth from "../../context/useAuth";
 
 export default function Header({ onMenuClick }) {
   const location = useLocation();
@@ -59,7 +59,6 @@ export default function Header({ onMenuClick }) {
 
       <div className="text-right">
         <p className="text-sm font-medium text-gray-800">{user?.name}</p>
-
         <p className="hidden text-xs text-gray-500 sm:block">
           {user?.role === "admin" ? "Administrador" : "Empleado"}
         </p>

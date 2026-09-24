@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
-import { useAuth } from "../context/AuthContext";
+import useAuth from "../context/useAuth";
 import { getProducts, deleteProduct } from "../services/productService";
 
 import ProductFilters from "../components/products/ProductFilters";
@@ -32,16 +32,22 @@ export default function Products() {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setError("");
+        const response = await getProducts();
+
+        setProducts(response.data);
+      } catch (error) {
+        console.error(error);
+
+        setError("No se pudieron cargar los productos.");
+      } finally {
+        setLoading(false);
+      }
+    };
     loadProducts();
   }, []);
-
-  useEffect(() => {
-    if (location.state?.successMessage) {
-      setSuccess(location.state.successMessage);
-
-      window.history.replaceState({}, document.title);
-    }
-  }, [location.state]);
 
   useEffect(() => {
     if (!success) {
@@ -56,22 +62,6 @@ export default function Products() {
       clearTimeout(timer);
     };
   }, [success]);
-
-  const loadProducts = async () => {
-    try {
-      setError("");
-
-      const response = await getProducts();
-
-      setProducts(response.data);
-    } catch (error) {
-      console.error(error);
-
-      setError("No se pudieron cargar los productos.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name
@@ -92,18 +82,18 @@ export default function Products() {
       return;
     }
 
+    const productToDelete = selectedProduct;
+
     try {
       setDeleting(true);
       setError("");
-
-      await deleteProduct(selectedProduct.id);
+      await deleteProduct(productToDelete.id);
 
       setProducts((prev) =>
-        prev.filter((product) => product.id !== selectedProduct.id),
+        prev.filter((product) => product.id !== productToDelete.id),
       );
 
       setSuccess("Producto eliminado correctamente.");
-
       setSelectedProduct(null);
     } catch (error) {
       console.error(error);
