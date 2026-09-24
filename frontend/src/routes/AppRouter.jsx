@@ -6,26 +6,30 @@ import Products from "../pages/Products";
 import AddProduct from "../pages/AddProduct";
 import EditProduct from "../pages/EditProduct";
 import Users from "../pages/Users";
+import NotFound from "../pages/NotFound";
 
 import MainLayout from "../components/layout/MainLayout";
 
 import ProtectedRoute from "./ProtectedRoute";
 import RoleRoute from "./RoleRoute";
+import PublicRoute from "./PublicRoute";
 
 export default function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
-
-        <Route path="/login" element={<Login />} />
-
-
+        {/* Ruta Pública */}
+        <Route element={<PublicRoute />}>
+          <Route path="/login" element={<Login />} />
+        </Route>
+        {/* Rutas Protegidas */}
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
-
             <Route index element={<Dashboard />} />
 
             <Route path="products" element={<Products />} />
+
+            {/* Ruta de administrador */}
 
             <Route element={<RoleRoute roles={["admin"]} />}>
               <Route path="products/new" element={<AddProduct />} />
@@ -36,6 +40,8 @@ export default function AppRouter() {
             </Route>
           </Route>
         </Route>
+        {/* Error 404 */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );

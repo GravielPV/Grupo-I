@@ -1,13 +1,7 @@
+import { getDaysUntilExpiration } from "../../utils/expiration";
+
 export default function ExpirationBadge({ expirationDate }) {
-  const today = new Date();
-
-  today.setHours(0, 0, 0, 0);
-
-  const expiration = new Date(`${expirationDate}T00:00:00`);
-
-  const difference = expiration.getTime() - today.getTime();
-
-  const daysRemaining = Math.ceil(difference / (1000 * 60 * 60 * 24));
+  const daysRemaining = getDaysUntilExpiration(expirationDate);
 
   if (daysRemaining < 0) {
     return (

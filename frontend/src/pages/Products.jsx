@@ -1,46 +1,77 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
+import { getProducts, deleteProduct } from "../services/productService";
 
 import ProductFilters from "../components/products/ProductFilters";
 import ProductTable from "../components/products/ProductTable";
-import { getProducts, deleteProduct } from "../services/productService"
-
-
+import Button from "../components/common/Button";
+import Spinner from "../components/common/Spinner";
+import EmptyState from "../components/common/EmptyState";
+import ErrorMessage from "../components/common/ErrorMessage";
+import Modal from "../components/common/Modal";
+import SuccessMessage from "../components/common/SuccessMessage";
 
 export default function Products() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const canManage = user?.role === "admin";
 
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true)
-
   const [search, setSearch] = useState("");
-
   const [category, setCategory] = useState("");
 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(location.state?.successMessage || "");
+
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
   useEffect(() => {
-    loadProducts()
-  }, [])
+    loadProducts();
+  }, []);
+
+  useEffect(() => {
+    if (location.state?.successMessage) {
+      setSuccess(location.state.successMessage);
+
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
+  useEffect(() => {
+    if (!success) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setSuccess("");
+    }, 4000);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [success]);
 
   const loadProducts = async () => {
-  try {
-    const response = await getProducts()
+    try {
+      setError("");
 
-    setProducts(response.data)
+      const response = await getProducts();
 
-  } catch (error) {
-    console.error(
-      "Error al cargar productos:",
-      error
-    )
+      setProducts(response.data);
+    } catch (error) {
+      console.error(error);
 
-  } finally {
-    setLoading(false)
-  }
-}
+      setError("No se pudieron cargar los productos.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name
@@ -52,38 +83,42 @@ export default function Products() {
     return matchesSearch && matchesCategory;
   });
 
-const handleDelete = async (id) => {
+  const handleDelete = (product) => {
+    setSelectedProduct(product);
+  };
 
-  const confirmDelete =
-    window.confirm(
-      "¿Deseas eliminar este producto?"
-    )
+  const confirmDelete = async () => {
+    if (!selectedProduct || deleting) {
+      return;
+    }
 
-  if (!confirmDelete) {
-    return
-  }
+    try {
+      setDeleting(true);
+      setError("");
 
-  try {
+      await deleteProduct(selectedProduct.id);
 
-    await deleteProduct(id)
+      setProducts((prev) =>
+        prev.filter((product) => product.id !== selectedProduct.id),
+      );
 
-    setProducts((prev) =>
-      prev.filter(
-        (product) => product.id !== id
-      )
-    )
+      setSuccess("Producto eliminado correctamente.");
 
-  } catch (error) {
+      setSelectedProduct(null);
+    } catch (error) {
+      console.error(error);
 
-    console.error(
-      "Error al eliminar:",
-      error
-    )
-  }
-}
+      setError(
+        error.response?.data?.message || "No se pudo eliminar el producto.",
+      );
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <div>
+      {/* Encabezado */}
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Inventario</h1>
@@ -94,15 +129,18 @@ const handleDelete = async (id) => {
         </div>
 
         {canManage && (
-          <Link
-            to="/products/new"
-            className="rounded-lg bg-blue-600 px-4 py-3 text-center text-sm font-medium text-white transition hover:bg-blue-700"
-          >
+          <Button onClick={() => navigate("/products/new")}>
             + Agregar producto
-          </Link>
+          </Button>
         )}
       </div>
+      {success && (
+        <div className="mt-6">
+          <SuccessMessage message={success} onClose={() => setSuccess("")} />
+        </div>
+      )}
 
+      {/* Filtros */}
       <ProductFilters
         search={search}
         setSearch={setSearch}
@@ -110,12 +148,68 @@ const handleDelete = async (id) => {
         setCategory={setCategory}
       />
 
-      <ProductTable
-        products={filteredProducts}
-        onDelete={handleDelete}
-        canManage={canManage}
-        loading={loading}
-      />
+      {/* Estados */}
+      <div className="mt-6">
+        {loading && <Spinner />}
+
+        {!loading && error && <ErrorMessage message={error} />}
+
+        {!loading && !error && filteredProducts.length === 0 && (
+          <EmptyState
+            title="No se encontraron productos"
+            message="Prueba cambiando la búsqueda o el filtro."
+          />
+        )}
+
+        {!loading && !error && filteredProducts.length > 0 && (
+          <ProductTable
+            products={filteredProducts}
+            onDelete={handleDelete}
+            canManage={canManage}
+          />
+        )}
+      </div>
+
+      <Modal
+        isOpen={!!selectedProduct}
+        onClose={() => {
+          if (!deleting) {
+            setSelectedProduct(null);
+          }
+        }}
+        title="Eliminar producto"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => setSelectedProduct(null)}
+              disabled={deleting}
+            >
+              Cancelar
+            </Button>
+
+            <Button
+              variant="danger"
+              onClick={confirmDelete}
+              disabled={deleting}
+            >
+              {deleting ? "Eliminando..." : "Eliminar"}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm leading-6 text-gray-500">
+          ¿Seguro que deseas eliminar el producto{" "}
+          <span className="font-medium text-gray-800">
+            {selectedProduct?.name}
+          </span>
+          ?
+        </p>
+
+        <p className="mt-2 text-sm text-gray-500">
+          Esta acción no se puede deshacer.
+        </p>
+      </Modal>
     </div>
   );
 }

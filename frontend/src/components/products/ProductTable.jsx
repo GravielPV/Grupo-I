@@ -88,7 +88,7 @@ export default function ProductTable({ products, onDelete, canManage }) {
                         </Link>
 
                         <button
-                          onClick={() => onDelete(product.id)}
+                          onClick={() => onDelete(product)}
                           className="rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
                         >
                           Eliminar

@@ -1,38 +1,112 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import UserTable from "../components/users/UserTable";
 import UserForm from "../components/users/UserForm";
+import Modal from "../components/common/Modal";
+import Button from "../components/common/Button";
+import { useAuth } from "../context/AuthContext";
+import SuccessMessage from "../components/common/SuccessMessage";
+
+import { getUsers, createUser, deleteUser } from "../services/userService";
 
 export default function Users() {
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: "Carlos Pérez",
-      username: "carlos01",
-      role: "admin",
-    },
-    {
-      id: 2,
-      name: "María Rodríguez",
-      username: "maria01",
-      role: "employee",
-    },
-  ]);
-
+  const [users, setUsers] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const handleCreate = (user) => {
-    const newUser = {
-      id: Date.now(),
-      ...user,
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [success, setSuccess] = useState("");
+
+  const { user: currentUser } = useAuth();
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  useEffect(() => {
+    if (!success) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setSuccess("");
+    }, 4000);
+
+    return () => {
+      clearTimeout(timer);
     };
+  }, [success]);
 
-    setUsers((prev) => [...prev, newUser]);
-    setShowForm(false);
+  const loadUsers = async () => {
+    try {
+      setError("");
+
+      const response = await getUsers();
+
+      setUsers(response.data);
+    } catch (error) {
+      console.error(error);
+
+      setError("No se pudieron cargar los usuarios.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDelete = (id) => {
-    setUsers((prev) => prev.filter((user) => user.id !== id));
+  const handleCreate = async (formData) => {
+    try {
+      setCreating(true);
+      setError("");
+
+      const response = await createUser(formData);
+
+      setUsers((prev) => [...prev, response.data]);
+
+      setSuccess("Usuario creado correctamente.");
+
+      setShowForm(false);
+
+      return true;
+    } catch (error) {
+      console.error(error);
+
+      setError(error.response?.data?.message || "No se pudo crear el usuario.");
+
+      return false;
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleDelete = (user) => {
+    setSelectedUser(user);
+  };
+  const confirmDelete = async () => {
+    if (!selectedUser || deleting) {
+      return;
+    }
+
+    try {
+      setDeleting(true);
+      setError("");
+
+      await deleteUser(selectedUser.id);
+
+      setUsers((prev) => prev.filter((user) => user.id !== selectedUser.id));
+
+      setSelectedUser(null);
+    } catch (error) {
+      console.error("Error al eliminar usuario:", error);
+
+      setError(
+        error.response?.data?.message || "No se pudo eliminar el usuario.",
+      );
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -53,14 +127,76 @@ export default function Users() {
           {showForm ? "Cerrar" : "+ Nuevo usuario"}
         </button>
       </div>
-
-      {showForm && (
+      {success && (
         <div className="mt-6">
-          <UserForm onSubmit={handleCreate} />
+          <SuccessMessage message={success} onClose={() => setSuccess("")} />
         </div>
       )}
 
-      <UserTable users={users} onDelete={handleDelete} />
+      {error && (
+        <div className="mt-6 rounded-lg bg-red-50 p-4 text-sm text-red-600">
+          {error}
+        </div>
+      )}
+
+      {showForm && (
+        <div className="mt-6">
+          <UserForm onSubmit={handleCreate} loading={creating} />
+        </div>
+      )}
+
+      {loading ? (
+        <div className="mt-6 rounded-xl border bg-white p-10 text-center">
+          <p className="text-gray-500">Cargando usuarios...</p>
+        </div>
+      ) : (
+        <UserTable
+          users={users}
+          onDelete={handleDelete}
+          currentUserId={currentUser?.id}
+        />
+      )}
+
+      <Modal
+        isOpen={!!selectedUser}
+        onClose={() => {
+          if (!deleting) {
+            setSelectedUser(null);
+          }
+        }}
+        title="Eliminar usuario"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => setSelectedUser(null)}
+              disabled={deleting}
+            >
+              Cancelar
+            </Button>
+
+            <Button
+              variant="danger"
+              onClick={confirmDelete}
+              disabled={deleting}
+            >
+              {deleting ? "Eliminando..." : "Eliminar"}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm leading-6 text-gray-500">
+          ¿Seguro que deseas eliminar al usuario{" "}
+          <span className="font-medium text-gray-800">
+            {selectedUser?.name}
+          </span>
+          ?
+        </p>
+
+        <p className="mt-2 text-sm text-gray-500">
+          Esta acción no se puede deshacer.
+        </p>
+      </Modal>
     </div>
   );
 }

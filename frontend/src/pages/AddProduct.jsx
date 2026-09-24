@@ -1,13 +1,40 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import ProductForm from "../components/products/ProductForm";
+import { createProduct } from "../services/productService";
 
 export default function AddProduct() {
   const navigate = useNavigate();
 
-  const handleSubmit = (formData) => {
-    console.log("Producto a guardar:", formData);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-    navigate("/products");
+  const handleSubmit = async (formData) => {
+    try {
+      setLoading(true);
+      setError("");
+
+      await createProduct({
+        ...formData,
+        price: Number(formData.price),
+        stock: Number(formData.stock),
+      });
+
+      navigate("/products", {
+        state: {
+          successMessage: "Producto creado correctamente.",
+        },
+      });
+    } catch (error) {
+      console.error(error);
+
+      setError(
+        error.response?.data?.message || "No se pudo crear el producto.",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -20,7 +47,17 @@ export default function AddProduct() {
         </p>
       </div>
 
-      <ProductForm onSubmit={handleSubmit} buttonText="Guardar producto" />
+      {error && (
+        <div className="mb-6 rounded-lg bg-red-50 p-4 text-sm text-red-600">
+          {error}
+        </div>
+      )}
+
+      <ProductForm
+        onSubmit={handleSubmit}
+        buttonText={loading ? "Guardando..." : "Guardar producto"}
+        loading={loading}
+      />
     </div>
   );
 }

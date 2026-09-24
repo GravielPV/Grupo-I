@@ -2,10 +2,14 @@ import { Navigate, Outlet } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
 
-export default function RoleRoute({ roles }) {
-  const { user } = useAuth();
+export default function PublicRoute() {
+  const { isAuthenticated, loading } = useAuth();
 
-  if (!roles.includes(user?.role)) {
+  if (loading) {
+    return null;
+  }
+
+  if (isAuthenticated) {
     return <Navigate to="/" replace />;
   }
 
