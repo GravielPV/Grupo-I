@@ -11,7 +11,6 @@ export default function Sidebar() {
         <h1 className="text-2xl font-bold text-blue-600">Pharmacy</h1>
       </div>
 
-      {/* Navegación */}
       <nav className="flex-1 px-4">
         <NavLink
           to="/"
@@ -56,7 +55,6 @@ export default function Sidebar() {
         )}
       </nav>
 
-      {/* Usuario */}
       <div className="border-t p-4">
         <div className="mb-3">
           <p className="font-medium text-gray-800">{user?.name}</p>

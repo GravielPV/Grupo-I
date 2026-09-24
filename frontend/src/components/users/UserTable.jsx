@@ -73,7 +73,6 @@ export default function UserTable({ users, onDelete }) {
         </div>
       </div>
 
-      {/* Modal de confirmación */}
       {selectedUser && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 px-4">
           <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">

@@ -37,7 +37,6 @@ export default function Users() {
 
   return (
     <div>
-      {/* Encabezado */}
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Usuarios</h1>
@@ -55,14 +54,12 @@ export default function Users() {
         </button>
       </div>
 
-      {/* Formulario */}
       {showForm && (
         <div className="mt-6">
           <UserForm onSubmit={handleCreate} />
         </div>
       )}
 
-      {/* Tabla */}
       <UserTable users={users} onDelete={handleDelete} />
     </div>
   );

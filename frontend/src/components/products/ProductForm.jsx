@@ -36,7 +36,6 @@ export default function ProductForm({
       className="rounded-xl border bg-white p-6 shadow-sm"
     >
       <div className="grid gap-5 md:grid-cols-2">
-        {/* Nombre */}
         <div className="md:col-span-2">
           <label
             htmlFor="name"
@@ -57,7 +56,6 @@ export default function ProductForm({
           />
         </div>
 
-        {/* Categoría */}
         <div>
           <label
             htmlFor="category"
@@ -82,7 +80,6 @@ export default function ProductForm({
           </select>
         </div>
 
-        {/* Precio */}
         <div>
           <label
             htmlFor="price"
@@ -105,7 +102,6 @@ export default function ProductForm({
           />
         </div>
 
-        {/* Stock */}
         <div>
           <label
             htmlFor="stock"
@@ -127,7 +123,6 @@ export default function ProductForm({
           />
         </div>
 
-        {/* Fecha */}
         <div>
           <label
             htmlFor="expirationDate"
@@ -148,7 +143,6 @@ export default function ProductForm({
         </div>
       </div>
 
-      {/* Botones */}
       <div className="mt-6 flex justify-end gap-3">
         <button
           type="button"

@@ -110,7 +110,6 @@ export default function Login() {
           </form>
         </div>
 
-        {/* Solo para desarrollo */}
         <div className="mt-5 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-700">
           <p className="font-medium">Usuarios de prueba</p>
 

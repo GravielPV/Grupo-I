@@ -1,7 +1,12 @@
 import { Link } from "react-router-dom";
-import StockBadge from "./StockBadge";
 
-export default function ProductTable({ products, onDelete }) {
+import StockBadge from "./StockBadge";
+import ExpirationBadge from "./ExpirationBadge";
+
+import { formatCurrency } from "../../utils/formatCurrency";
+import { formatDate } from "../../utils/formatDate";
+
+export default function ProductTable({ products, onDelete, canManage }) {
   return (
     <div className="mt-6 overflow-hidden rounded-xl border bg-white shadow-sm">
       <div className="overflow-x-auto">
@@ -9,11 +14,16 @@ export default function ProductTable({ products, onDelete }) {
           <thead className="bg-gray-50 text-sm text-gray-500">
             <tr>
               <th className="px-5 py-4">Producto</th>
+
               <th className="px-5 py-4">Categoría</th>
+
               <th className="px-5 py-4">Precio</th>
+
               <th className="px-5 py-4">Stock</th>
+
               <th className="px-5 py-4">Vencimiento</th>
-              <th className="px-5 py-4 text-right">Acciones</th>
+
+              {canManage && <th className="px-5 py-4 text-right">Acciones</th>}
             </tr>
           </thead>
 
@@ -21,7 +31,7 @@ export default function ProductTable({ products, onDelete }) {
             {products.length === 0 ? (
               <tr>
                 <td
-                  colSpan="6"
+                  colSpan={canManage ? 6 : 5}
                   className="px-5 py-10 text-center text-gray-500"
                 >
                   No se encontraron productos.
@@ -42,7 +52,7 @@ export default function ProductTable({ products, onDelete }) {
                   </td>
 
                   <td className="px-5 py-4 text-gray-500">
-                    RD$ {product.price.toLocaleString()}
+                    {formatCurrency(product.price)}
                   </td>
 
                   <td className="px-5 py-4">
@@ -55,27 +65,37 @@ export default function ProductTable({ products, onDelete }) {
                     </div>
                   </td>
 
-                  <td className="px-5 py-4 text-gray-500">
-                    {product.expirationDate}
-                  </td>
-
                   <td className="px-5 py-4">
-                    <div className="flex justify-end gap-2">
-                      <Link
-                        to={`/products/edit/${product.id}`}
-                        className="rounded-lg px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50"
-                      >
-                        Editar
-                      </Link>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-sm text-gray-500">
+                        {formatDate(product.expirationDate)}
+                      </span>
 
-                      <button
-                        onClick={() => onDelete(product.id)}
-                        className="rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
-                      >
-                        Eliminar
-                      </button>
+                      <ExpirationBadge
+                        expirationDate={product.expirationDate}
+                      />
                     </div>
                   </td>
+
+                  {canManage && (
+                    <td className="px-5 py-4">
+                      <div className="flex justify-end gap-2">
+                        <Link
+                          to={`/products/edit/${product.id}`}
+                          className="rounded-lg px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50"
+                        >
+                          Editar
+                        </Link>
+
+                        <button
+                          onClick={() => onDelete(product.id)}
+                          className="rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))
             )}

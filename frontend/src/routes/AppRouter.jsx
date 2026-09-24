@@ -16,19 +16,17 @@ export default function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Ruta pública */}
+
         <Route path="/login" element={<Login />} />
 
-        {/* Todas estas rutas requieren autenticación */}
+
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
-            {/* Dashboard */}
+
             <Route index element={<Dashboard />} />
 
-            {/* Inventario */}
             <Route path="products" element={<Products />} />
 
-            {/* Rutas exclusivas del administrador */}
             <Route element={<RoleRoute roles={["admin"]} />}>
               <Route path="products/new" element={<AddProduct />} />
 

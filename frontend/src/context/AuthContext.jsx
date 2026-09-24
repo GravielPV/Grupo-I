@@ -5,35 +5,24 @@ import {
   useState
 } from "react"
 
+import {
+  login as loginRequest
+} from "../services/authService"
+
 const AuthContext = createContext()
 
-// Esto es solamente para probar el frontend.
-// Luego será sustituido por el backend + MongoDB + JWT.
-const demoUsers = [
-  {
-    id: 1,
-    name: "Carlos Pérez",
-    username: "admin",
-    password: "123456",
-    role: "admin"
-  },
-  {
-    id: 2,
-    name: "María Rodríguez",
-    username: "empleado",
-    password: "123456",
-    role: "employee"
-  }
-]
-
 export function AuthProvider({ children }) {
+
   const [user, setUser] = useState(null)
   const [token, setToken] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("pharmacy_user")
-    const savedToken = localStorage.getItem("pharmacy_token")
+    const savedUser =
+      localStorage.getItem("pharmacy_user")
+
+    const savedToken =
+      localStorage.getItem("pharmacy_token")
 
     if (savedUser && savedToken) {
       setUser(JSON.parse(savedUser))
@@ -44,49 +33,53 @@ export function AuthProvider({ children }) {
   }, [])
 
   const login = async (username, password) => {
-    const foundUser = demoUsers.find(
-      (user) =>
-        user.username === username &&
-        user.password === password
-    )
 
-    if (!foundUser) {
+    try {
+
+      const response = await loginRequest({
+        username,
+        password
+      })
+
+      const { token, user } = response.data
+
+      localStorage.setItem(
+        "pharmacy_user",
+        JSON.stringify(user)
+      )
+
+      localStorage.setItem(
+        "pharmacy_token",
+        token
+      )
+
+      setUser(user)
+      setToken(token)
+
+      return {
+        success: true
+      }
+
+    } catch (error) {
+
       return {
         success: false,
-        message: "Usuario o contraseña incorrectos."
+        message:
+          error.response?.data?.message ||
+          "No se pudo iniciar sesión."
       }
-    }
-
-    const userData = {
-      id: foundUser.id,
-      name: foundUser.name,
-      username: foundUser.username,
-      role: foundUser.role
-    }
-
-    const demoToken = "demo-token"
-
-    localStorage.setItem(
-      "pharmacy_user",
-      JSON.stringify(userData)
-    )
-
-    localStorage.setItem(
-      "pharmacy_token",
-      demoToken
-    )
-
-    setUser(userData)
-    setToken(demoToken)
-
-    return {
-      success: true
     }
   }
 
   const logout = () => {
-    localStorage.removeItem("pharmacy_user")
-    localStorage.removeItem("pharmacy_token")
+
+    localStorage.removeItem(
+      "pharmacy_user"
+    )
+
+    localStorage.removeItem(
+      "pharmacy_token"
+    )
 
     setUser(null)
     setToken(null)
