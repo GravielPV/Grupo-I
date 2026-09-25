@@ -1,0 +1,14 @@
+{
+  "name": "pharmacy-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.14.0" },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env src/server.js",
+    "dev": "node --env-file-if-exists=.env --watch src/server.js",
+    "test": "node --test",
+    "bootstrap-admin": "node --env-file-if-exists=.env src/bootstrap.js"
+  },
+  "dependencies": { "express": "^5.1.0" }
+}
