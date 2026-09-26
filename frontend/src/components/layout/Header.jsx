@@ -1,67 +1,43 @@
-import { useLocation } from "react-router-dom";
+import { Menu, UserRound } from "lucide-react";
+
 import useAuth from "../../context/useAuth";
+import { ROLE_LABELS } from "../../constants/roles";
 
 export default function Header({ onMenuClick }) {
-  const location = useLocation();
   const { user } = useAuth();
 
-  const getTitle = () => {
-    if (location.pathname === "/") {
-      return "Dashboard";
-    }
-
-    if (location.pathname === "/products") {
-      return "Inventario";
-    }
-
-    if (location.pathname === "/products/new") {
-      return "Agregar producto";
-    }
-
-    if (location.pathname.startsWith("/products/edit/")) {
-      return "Editar producto";
-    }
-
-    if (location.pathname === "/users") {
-      return "Usuarios";
-    }
-
-    return "Pharmacy";
-  };
-
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-white px-4 sm:px-6">
-      <div className="flex items-center gap-3">
-        {/* Menú móvil */}
-        <button
-          onClick={onMenuClick}
-          className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 lg:hidden"
-          aria-label="Abrir menú"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="2"
-            stroke="currentColor"
-            className="h-6 w-6"
+    <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/95 backdrop-blur">
+      <div className="flex h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
+        {/* Izquierda */}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={onMenuClick}
+            className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100 lg:hidden"
+            aria-label="Abrir menú"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"
-            />
-          </svg>
-        </button>
+            <Menu size={22} />
+          </button>
 
-        <h2 className="text-lg font-semibold text-gray-800">{getTitle()}</h2>
-      </div>
+          <div>
+            <p className="text-sm text-gray-500">Bienvenido</p>
 
-      <div className="text-right">
-        <p className="text-sm font-medium text-gray-800">{user?.name}</p>
-        <p className="hidden text-xs text-gray-500 sm:block">
-          {user?.role === "admin" ? "Administrador" : "Empleado"}
-        </p>
+            <h2 className="font-semibold text-gray-900">{user?.name}</h2>
+          </div>
+        </div>
+
+        {/* Derecha */}
+        <div className="flex items-center gap-3">
+          <div className="hidden text-right sm:block">
+            <p className="text-sm font-medium text-gray-800">{user?.name}</p>
+
+            <p className="text-xs text-gray-500">{ROLE_LABELS[user?.role]}</p>
+          </div>
+
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+            <UserRound size={20} />
+          </div>
+        </div>
       </div>
     </header>
   );

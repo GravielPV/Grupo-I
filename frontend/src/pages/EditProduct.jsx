@@ -5,6 +5,8 @@ import ProductForm from "../components/products/ProductForm";
 
 import { getProductById, updateProduct } from "../services/productService";
 
+import { getCategories } from "../services/categoryService"
+
 export default function EditProduct() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -14,31 +16,46 @@ export default function EditProduct() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const loadProduct = async () => {
-      try {
-        setLoading(true);
-        setError("");
+  const [categories, setCategories] = useState([])
 
-        const response = await getProductById(id);
-        setProduct(response.data);        
+useEffect(() => {
+  const loadProduct = async () => {
+    try {
+      setLoading(true)
+      setError("")
 
-        const productData = response.data;
+      const [
+        productResponse,
+        categoriesResponse
+      ] = await Promise.all([getProductById(id), getCategories()])
 
-        setProduct({
-          ...productData,
-          expirationDate: productData.expirationDate?.split("T")[0] || "",
-        });
-      } catch (error) {
-        console.error(error);
+      const productData =
+        productResponse.data
 
-        setError("No se pudo cargar el producto.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadProduct();
-  }, [id]);
+      setProduct({
+        ...productData,
+        expirationDate:
+          productData.expirationDate
+            ?.split("T")[0] || ""
+      })
+
+      setCategories(
+        categoriesResponse.data
+      )
+    } catch (error) {
+      console.error(error)
+
+      setError(
+        error.response?.data?.message ||
+        "No se pudieron cargar los datos."
+      )
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  loadProduct()
+}, [id])
 
   const handleSubmit = async (formData) => {
     try {
@@ -101,6 +118,7 @@ export default function EditProduct() {
 
       <ProductForm
         initialData={product}
+        categories={categories}
         onSubmit={handleSubmit}
         buttonText={saving ? "Actualizando..." : "Actualizar producto"}
         loading={saving}

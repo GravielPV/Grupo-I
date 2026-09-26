@@ -6,7 +6,7 @@ export default function ExpirationBadge({ expirationDate }) {
 
   if (daysRemaining < 0) {
     return (
-      <span className="w-fit rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600">
+      <span className="inline-flex items-center rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">
         Vencido
       </span>
     );
@@ -14,14 +14,14 @@ export default function ExpirationBadge({ expirationDate }) {
 
   if (daysRemaining <= EXPIRATION_WARNING_DAYS) {
     return (
-      <span className="w-fit rounded-full bg-yellow-50 px-3 py-1 text-xs font-medium text-yellow-600">
+      <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
         Próximo a vencer
       </span>
     );
   }
 
   return (
-    <span className="w-fit rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-600">
+    <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
       Vigente
     </span>
   );

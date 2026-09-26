@@ -13,6 +13,8 @@ import ErrorMessage from "../components/common/ErrorMessage";
 import Modal from "../components/common/Modal";
 import SuccessMessage from "../components/common/SuccessMessage";
 
+import { getCategories } from "../services/categoryService";
+
 export default function Products() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -31,17 +33,26 @@ export default function Products() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
+  const [categories, setCategories] = useState([]);
+
   useEffect(() => {
     const loadProducts = async () => {
       try {
+        setLoading(true)
         setError("");
-        const response = await getProducts();
 
-        setProducts(response.data);
+        const [productsResponse, categoriesResponse] = await Promise.all([
+          getProducts(),
+          getCategories(),
+        ]);
+
+        setProducts(productsResponse.data);
+        setCategories(categoriesResponse.data);
+
       } catch (error) {
         console.error(error);
 
-        setError("No se pudieron cargar los productos.");
+        setError(error.response?.data?.message || "No se pudieron cargar los productos.");
       } finally {
         setLoading(false);
       }
@@ -68,7 +79,7 @@ export default function Products() {
       .toLowerCase()
       .includes(search.toLowerCase());
 
-    const matchesCategory = category === "" || product.category === category;
+    const matchesCategory = !category || product.category === category;
 
     return matchesSearch && matchesCategory;
   });
@@ -136,6 +147,7 @@ export default function Products() {
         setSearch={setSearch}
         category={category}
         setCategory={setCategory}
+        categories={categories}
       />
 
       {/* Estados */}

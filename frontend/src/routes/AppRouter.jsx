@@ -7,6 +7,7 @@ import AddProduct from "../pages/AddProduct";
 import EditProduct from "../pages/EditProduct";
 import Users from "../pages/Users";
 import NotFound from "../pages/NotFound";
+import Categories from "../pages/Categories"
 
 import MainLayout from "../components/layout/MainLayout";
 
@@ -37,6 +38,8 @@ export default function AppRouter() {
               <Route path="products/new" element={<AddProduct />} />
 
               <Route path="products/edit/:id" element={<EditProduct />} />
+
+                <Route path="categories" element={<Categories />}/>
 
               <Route path="users" element={<Users />} />
             </Route>

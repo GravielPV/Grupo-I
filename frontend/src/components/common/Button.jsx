@@ -7,9 +7,15 @@ export default function Button({
   className = "",
 }) {
   const variants = {
-    primary: "bg-blue-600 text-white hover:bg-blue-700",
-    secondary: "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50",
-    danger: "bg-red-600 text-white hover:bg-red-700",
+    primary:
+      "bg-emerald-600 text-white hover:bg-emerald-700 focus:ring-emerald-200",
+
+    secondary:
+      "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-gray-200",
+
+    danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-200",
+
+    ghost: "bg-transparent text-gray-600 hover:bg-gray-100 focus:ring-gray-200",
   };
 
   return (
@@ -18,10 +24,12 @@ export default function Button({
       onClick={onClick}
       disabled={disabled}
       className={`
-        rounded-lg px-4 py-3 text-sm font-medium
+        inline-flex items-center justify-center gap-2
+        rounded-lg px-4 py-2.5
+        text-sm font-medium
         transition
-        disabled:cursor-not-allowed
-        disabled:opacity-60
+        focus:outline-none focus:ring-2
+        disabled:cursor-not-allowed disabled:opacity-60
         ${variants[variant]}
         ${className}
       `}

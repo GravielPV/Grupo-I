@@ -110,11 +110,9 @@ export default function Login() {
           </form>
         </div>
 
-        <div className="mt-5 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-700">
-          <p className="font-medium">Usuarios de prueba</p>
-          <p className="mt-1">Admin: admin / 123456</p>
-          <p>Empleado: empleado / 123456</p>
-        </div>
+        {/* <div className="mt-5 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-700">
+
+        </div> */}
       </div>
     </div>
   );

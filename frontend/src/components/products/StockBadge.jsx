@@ -3,7 +3,7 @@ import { LOW_STOCK_LIMIT } from "../../constants/inventory";
 export default function StockBadge({ stock }) {
   if (stock === 0) {
     return (
-      <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600">
+      <span className="inline-flex items-center rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">
         Agotado
       </span>
     );
@@ -11,14 +11,14 @@ export default function StockBadge({ stock }) {
 
   if (stock <= LOW_STOCK_LIMIT) {
     return (
-      <span className="rounded-full bg-yellow-50 px-3 py-1 text-xs font-medium text-yellow-600">
+      <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
         Stock bajo
       </span>
     );
   }
 
   return (
-    <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-600">
+    <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
       Disponible
     </span>
   );

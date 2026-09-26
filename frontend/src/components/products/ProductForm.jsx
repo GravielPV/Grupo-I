@@ -2,13 +2,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Button from "../common/Button";
-import { PRODUCT_CATEGORIES } from "../../constants/categories";
 
 export default function ProductForm({
   initialData = {},
   onSubmit,
   buttonText = "Guardar producto",
   loading = false,
+  categories = []
 }) {
   const navigate = useNavigate();
 
@@ -84,17 +84,17 @@ export default function ProductForm({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    const isValid = validateForm();
+  const isValid = validateForm();
 
-    if (!isValid) {
-      return;
-    }
+  if (!isValid) {
+    return;
+  }
 
-    await onSubmit(form);
-  };
+  await onSubmit(form);
+};
 
   return (
     <form
@@ -133,21 +133,14 @@ export default function ProductForm({
             Categoría
           </label>
 
-          <select
-            name="category"
-            value={form.category}
-            onChange={handleChange}
-            className={`w-full rounded-lg border px-4 py-3 outline-none transition focus:ring-2 ${
-              errors.category
-                ? "border-red-400 focus:ring-red-100"
-                : "border-gray-300 focus:border-blue-500 focus:ring-blue-100"
-            }`}
+          <select name="category" value={form.category} onChange={handleChange}
+          className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
           >
-            <option value="">Seleccionar categoría</option>
+            <option value="">Seleccione una categoría</option>
 
-            {PRODUCT_CATEGORIES.map((category) => (
-              <option key={category} value={category}>
-                {category}
+            {categories.map((category) => (
+              <option key={category._id || category.id } value={category.name}>
+                {category.name}
               </option>
             ))}
           </select>

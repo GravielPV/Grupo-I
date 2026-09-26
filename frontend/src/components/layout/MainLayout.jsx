@@ -7,25 +7,17 @@ import Header from "./Header";
 export default function MainLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const openSidebar = () => {
-    setSidebarOpen(true);
-  };
-
-  const closeSidebar = () => {
-    setSidebarOpen(false);
-  };
-
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
+    <div className="min-h-screen bg-gray-50">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <main className="lg:ml-64">
-        <Header onMenuClick={openSidebar} />
-        
-        <section className="p-4 sm:p-6">
+      <div className="lg:ml-64">
+        <Header onMenuClick={() => setSidebarOpen(true)} />
+
+        <main className="p-4 sm:p-6 lg:p-8">
           <Outlet />
-        </section>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

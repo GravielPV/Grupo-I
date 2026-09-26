@@ -1,14 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import ProductForm from "../components/products/ProductForm";
 import { createProduct } from "../services/productService";
+
+import { getCategories } from "../services/categoryService";
 
 export default function AddProduct() {
   const navigate = useNavigate();
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+const [categories, setCategories] = useState([])
+const [loadingCategories, setLoadingCategories] = useState(true)
 
   const handleSubmit = async (formData) => {
     try {
@@ -37,6 +42,29 @@ export default function AddProduct() {
     }
   };
 
+  useEffect(() => {
+  const loadCategories = async () => {
+    try {
+      const response = await getCategories()
+
+      setCategories(response.data)
+    } catch (error) {
+      console.error(
+        "Error al cargar las categorías:",
+        error
+      )
+
+      setError(
+        "No se pudieron cargar las categorías."
+      )
+    } finally {
+      setLoadingCategories(false)
+    }
+  }
+
+  loadCategories()
+}, [])
+
   return (
     <div>
       <div className="mb-6">
@@ -52,8 +80,11 @@ export default function AddProduct() {
           {error}
         </div>
       )}
+      {loadingCategories } 
 
       <ProductForm
+      
+        categories={categories}
         onSubmit={handleSubmit}
         buttonText={loading ? "Guardando..." : "Guardar producto"}
         loading={loading}
