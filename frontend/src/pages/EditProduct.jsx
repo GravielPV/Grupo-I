@@ -2,60 +2,56 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import ProductForm from "../components/products/ProductForm";
+import Spinner from "../components/common/Spinner";
+import ErrorMessage from "../components/common/ErrorMessage";
 
 import { getProductById, updateProduct } from "../services/productService";
 
-import { getCategories } from "../services/categoryService"
+import { getCategories } from "../services/categoryService";
 
 export default function EditProduct() {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const [product, setProduct] = useState(null);
+  const [categories, setCategories] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const [categories, setCategories] = useState([])
+  useEffect(() => {
+    const loadProduct = async () => {
+      try {
+        setLoading(true);
+        setError("");
 
-useEffect(() => {
-  const loadProduct = async () => {
-    try {
-      setLoading(true)
-      setError("")
+        const [productResponse, categoriesResponse] = await Promise.all([
+          getProductById(id),
+          getCategories(),
+        ]);
 
-      const [
-        productResponse,
-        categoriesResponse
-      ] = await Promise.all([getProductById(id), getCategories()])
+        const productData = productResponse.data;
 
-      const productData =
-        productResponse.data
+        setProduct({
+          ...productData,
+          expirationDate: productData.expirationDate?.split("T")[0] || "",
+        });
 
-      setProduct({
-        ...productData,
-        expirationDate:
-          productData.expirationDate
-            ?.split("T")[0] || ""
-      })
+        setCategories(categoriesResponse.data);
+      } catch (error) {
+        console.error(error);
 
-      setCategories(
-        categoriesResponse.data
-      )
-    } catch (error) {
-      console.error(error)
+        setError(
+          error.response?.data?.message || "No se pudieron cargar los datos.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      setError(
-        error.response?.data?.message ||
-        "No se pudieron cargar los datos."
-      )
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  loadProduct()
-}, [id])
+    loadProduct();
+  }, [id]);
 
   const handleSubmit = async (formData) => {
     try {
@@ -86,43 +82,47 @@ useEffect(() => {
 
   if (loading) {
     return (
-      <div className="rounded-xl border bg-white p-10 text-center">
-        <p className="text-gray-500">Cargando producto...</p>
+      <div className="flex min-h-64 items-center justify-center">
+        <Spinner />
       </div>
     );
   }
 
   if (error && !product) {
-    return (
-      <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">
-        {error}
-      </div>
-    );
+    return <ErrorMessage message={error} />;
   }
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Editar producto</h1>
+      {/* Encabezado */}
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+          Editar producto
+        </h1>
 
-        <p className="mt-1 text-gray-500">
+        <p className="mt-1 text-sm text-gray-500">
           Actualiza la información del medicamento.
         </p>
       </div>
 
+      {/* Error al actualizar */}
       {error && (
-        <div className="mb-6 rounded-lg bg-red-50 p-4 text-sm text-red-600">
-          {error}
+        <div className="mt-6">
+          <ErrorMessage message={error} />
         </div>
       )}
 
-      <ProductForm
-        initialData={product}
-        categories={categories}
-        onSubmit={handleSubmit}
-        buttonText={saving ? "Actualizando..." : "Actualizar producto"}
-        loading={saving}
-      />
+      {/* Formulario */}
+      <div className="mt-6">
+        <ProductForm
+          initialData={product}
+          categories={categories}
+          onSubmit={handleSubmit}
+          buttonText="Actualizar producto"
+          loadingText="Actualizando..."
+          loading={saving}
+        />
+      </div>
     </div>
   );
 }

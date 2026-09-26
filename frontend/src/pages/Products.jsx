@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { Plus } from "lucide-react";
 
 import useAuth from "../context/useAuth";
 import { getProducts, deleteProduct } from "../services/productService";
@@ -38,21 +39,25 @@ export default function Products() {
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        setLoading(true)
+        setLoading(true);
         setError("");
 
-        const [productsResponse, categoriesResponse] = await Promise.all([
+        const [productsResponse,
+          categoriesResponse
+        ] = await Promise.all([
           getProducts(),
           getCategories(),
         ]);
 
         setProducts(productsResponse.data);
         setCategories(categoriesResponse.data);
-
       } catch (error) {
         console.error(error);
 
-        setError(error.response?.data?.message || "No se pudieron cargar los productos.");
+        setError(
+          error.response?.data?.message ||
+            "No se pudieron cargar los productos.",
+        );
       } finally {
         setLoading(false);
       }
@@ -120,21 +125,26 @@ export default function Products() {
   return (
     <div>
       {/* Encabezado */}
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Inventario</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+            Inventario
+          </h1>
 
-          <p className="mt-1 text-gray-500">
-            Gestiona y consulta los medicamentos.
+          <p className="mt-1 text-sm text-gray-500">
+            Gestiona y consulta los medicamentos disponibles.
           </p>
         </div>
 
         {canManage && (
           <Button onClick={() => navigate("/products/new")}>
-            + Agregar producto
+            <Plus size={18} />
+            Agregar producto
           </Button>
         )}
       </div>
+
+      {/* Mensaje de éxito */}
       {success && (
         <div className="mt-6">
           <SuccessMessage message={success} onClose={() => setSuccess("")} />
@@ -142,17 +152,23 @@ export default function Products() {
       )}
 
       {/* Filtros */}
-      <ProductFilters
-        search={search}
-        setSearch={setSearch}
-        category={category}
-        setCategory={setCategory}
-        categories={categories}
-      />
-
-      {/* Estados */}
       <div className="mt-6">
-        {loading && <Spinner />}
+        <ProductFilters
+          search={search}
+          setSearch={setSearch}
+          category={category}
+          setCategory={setCategory}
+          categories={categories}
+        />
+      </div>
+
+      {/* Resultados */}
+      <div className="mt-6">
+        {loading && (
+          <div className="flex min-h-48 items-center justify-center">
+            <Spinner />
+          </div>
+        )}
 
         {!loading && error && <ErrorMessage message={error} />}
 
@@ -172,6 +188,7 @@ export default function Products() {
         )}
       </div>
 
+      {/* Modal de eliminación */}
       <Modal
         isOpen={!!selectedProduct}
         onClose={() => {

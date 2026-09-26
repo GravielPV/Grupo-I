@@ -1,24 +1,31 @@
 import { useEffect, useState } from "react";
+import { Plus, X } from "lucide-react";
 
 import UserTable from "../components/users/UserTable";
 import UserForm from "../components/users/UserForm";
+
 import Modal from "../components/common/Modal";
 import Button from "../components/common/Button";
-import useAuth from "../context/useAuth";
+import Spinner from "../components/common/Spinner";
+import ErrorMessage from "../components/common/ErrorMessage";
 import SuccessMessage from "../components/common/SuccessMessage";
+
+import useAuth from "../context/useAuth";
 
 import { getUsers, createUser, deleteUser } from "../services/userService";
 
 export default function Users() {
   const [users, setUsers] = useState([]);
   const [showForm, setShowForm] = useState(false);
+
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const [selectedUser, setSelectedUser] = useState(null);
-  const [deleting, setDeleting] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [success, setSuccess] = useState("");
 
   const { user: currentUser } = useAuth();
 
@@ -33,11 +40,15 @@ export default function Users() {
       } catch (error) {
         console.error(error);
 
-        setError("No se pudieron cargar los usuarios.");
+        setError(
+          error.response?.data?.message ||
+            "No se pudieron cargar los usuarios.",
+        );
       } finally {
         setLoading(false);
       }
     };
+
     loadUsers();
   }, []);
 
@@ -83,6 +94,7 @@ export default function Users() {
   const handleDelete = (user) => {
     setSelectedUser(user);
   };
+
   const confirmDelete = async () => {
     if (!selectedUser || deleting) {
       return;
@@ -95,6 +107,8 @@ export default function Users() {
       await deleteUser(selectedUser.id);
 
       setUsers((prev) => prev.filter((user) => user.id !== selectedUser.id));
+
+      setSuccess("Usuario eliminado correctamente.");
 
       setSelectedUser(null);
     } catch (error) {
@@ -110,22 +124,37 @@ export default function Users() {
 
   return (
     <div>
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+      {/* Encabezado */}
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Usuarios</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+            Usuarios
+          </h1>
 
-          <p className="mt-1 text-gray-500">
-            Administra los usuarios del sistema.
+          <p className="mt-1 text-sm text-gray-500">
+            Administra los usuarios y sus roles dentro del sistema.
           </p>
         </div>
 
-        <button
+        <Button
+          variant={showForm ? "secondary" : "primary"}
           onClick={() => setShowForm((prev) => !prev)}
-          className="rounded-lg bg-blue-600 px-4 py-3 text-sm font-medium text-white hover:bg-blue-700"
         >
-          {showForm ? "Cerrar" : "+ Nuevo usuario"}
-        </button>
+          {showForm ? (
+            <>
+              <X size={18} />
+              Cerrar
+            </>
+          ) : (
+            <>
+              <Plus size={18} />
+              Nuevo usuario
+            </>
+          )}
+        </Button>
       </div>
+
+      {/* Mensajes */}
       {success && (
         <div className="mt-6">
           <SuccessMessage message={success} onClose={() => setSuccess("")} />
@@ -133,29 +162,34 @@ export default function Users() {
       )}
 
       {error && (
-        <div className="mt-6 rounded-lg bg-red-50 p-4 text-sm text-red-600">
-          {error}
+        <div className="mt-6">
+          <ErrorMessage message={error} />
         </div>
       )}
 
+      {/* Formulario */}
       {showForm && (
         <div className="mt-6">
           <UserForm onSubmit={handleCreate} loading={creating} />
         </div>
       )}
 
-      {loading ? (
-        <div className="mt-6 rounded-xl border bg-white p-10 text-center">
-          <p className="text-gray-500">Cargando usuarios...</p>
-        </div>
-      ) : (
-        <UserTable
-          users={users}
-          onDelete={handleDelete}
-          currentUserId={currentUser?.id}
-        />
-      )}
+      {/* Usuarios */}
+      <div className="mt-6">
+        {loading ? (
+          <div className="flex min-h-48 items-center justify-center">
+            <Spinner />
+          </div>
+        ) : (
+          <UserTable
+            users={users}
+            onDelete={handleDelete}
+            currentUserId={currentUser?.id}
+          />
+        )}
+      </div>
 
+      {/* Modal */}
       <Modal
         isOpen={!!selectedUser}
         onClose={() => {

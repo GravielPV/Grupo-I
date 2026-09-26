@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import ProductForm from "../components/products/ProductForm";
-import { createProduct } from "../services/productService";
+import Spinner from "../components/common/Spinner";
+import ErrorMessage from "../components/common/ErrorMessage";
 
+import { createProduct } from "../services/productService";
 import { getCategories } from "../services/categoryService";
 
 export default function AddProduct() {
@@ -12,8 +14,31 @@ export default function AddProduct() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-const [categories, setCategories] = useState([])
-const [loadingCategories, setLoadingCategories] = useState(true)
+  const [categories, setCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setError("");
+
+        const response = await getCategories();
+
+        setCategories(response.data);
+      } catch (error) {
+        console.error("Error al cargar las categorías:", error);
+
+        setError(
+          error.response?.data?.message ||
+            "No se pudieron cargar las categorías.",
+        );
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
 
   const handleSubmit = async (formData) => {
     try {
@@ -42,53 +67,41 @@ const [loadingCategories, setLoadingCategories] = useState(true)
     }
   };
 
-  useEffect(() => {
-  const loadCategories = async () => {
-    try {
-      const response = await getCategories()
-
-      setCategories(response.data)
-    } catch (error) {
-      console.error(
-        "Error al cargar las categorías:",
-        error
-      )
-
-      setError(
-        "No se pudieron cargar las categorías."
-      )
-    } finally {
-      setLoadingCategories(false)
-    }
-  }
-
-  loadCategories()
-}, [])
-
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Agregar producto</h1>
+      {/* Encabezado */}
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+          Agregar producto
+        </h1>
 
-        <p className="mt-1 text-gray-500">
+        <p className="mt-1 text-sm text-gray-500">
           Registra un nuevo medicamento en el inventario.
         </p>
       </div>
 
+      {/* Error */}
       {error && (
-        <div className="mb-6 rounded-lg bg-red-50 p-4 text-sm text-red-600">
-          {error}
+        <div className="mt-6">
+          <ErrorMessage message={error} />
         </div>
       )}
-      {loadingCategories } 
 
-      <ProductForm
-      
-        categories={categories}
-        onSubmit={handleSubmit}
-        buttonText={loading ? "Guardando..." : "Guardar producto"}
-        loading={loading}
-      />
+      {/* Formulario */}
+      <div className="mt-6">
+        {loadingCategories ? (
+          <div className="flex min-h-48 items-center justify-center">
+            <Spinner />
+          </div>
+        ) : (
+          <ProductForm
+            categories={categories}
+            onSubmit={handleSubmit}
+            buttonText="Guardar producto"
+            loading={loading}
+          />
+        )}
+      </div>
     </div>
   );
 }

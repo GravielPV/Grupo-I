@@ -1,143 +1,129 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
 
 import {
   createCategory,
   deleteCategory,
-  getCategories
-} from "../services/categoryService"
+  getCategories,
+} from "../services/categoryService";
 
-import CategoryForm from "../components/categories/CategoryForm"
-import CategoryTable from "../components/categories/CategoryTable"
+import CategoryForm from "../components/categories/CategoryForm";
+import CategoryTable from "../components/categories/CategoryTable";
 
-import Spinner from "../components/common/Spinner"
-import EmptyState from "../components/common/EmptyState"
-import ErrorMessage from "../components/common/ErrorMessage"
-import SuccessMessage from "../components/common/SuccessMessage"
-import Modal from "../components/common/Modal"
-import Button from "../components/common/Button"
+import Spinner from "../components/common/Spinner";
+import EmptyState from "../components/common/EmptyState";
+import ErrorMessage from "../components/common/ErrorMessage";
+import SuccessMessage from "../components/common/SuccessMessage";
+import Modal from "../components/common/Modal";
+import Button from "../components/common/Button";
 
 export default function Categories() {
-  const [categories, setCategories] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [creating, setCreating] = useState(false)
-  const [deleting, setDeleting] = useState(false)
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const [selectedCategory, setSelectedCategory] =
-    useState(null)
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        setError("")
+        setError("");
 
-        const response = await getCategories()
+        const response = await getCategories();
 
-        setCategories(response.data)
+        setCategories(response.data);
       } catch (error) {
-        console.error(error)
+        console.error(error);
 
-        setError(
-          "No se pudieron cargar las categorías."
-        )
+        setError("No se pudieron cargar las categorías.");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    loadCategories()
-  }, [])
+    loadCategories();
+  }, []);
 
   useEffect(() => {
-    if (!success) return
+    if (!success) return;
 
     const timer = setTimeout(() => {
-      setSuccess("")
-    }, 4000)
+      setSuccess("");
+    }, 4000);
 
-    return () => clearTimeout(timer)
-  }, [success])
+    return () => clearTimeout(timer);
+  }, [success]);
 
   const handleCreate = async (category) => {
     try {
-      setCreating(true)
-      setError("")
+      setCreating(true);
+      setError("");
 
-      const response =
-        await createCategory(category)
+      const response = await createCategory(category);
 
       setCategories((prev) =>
-        [...prev, response.data].sort((a, b) =>
-          a.name.localeCompare(b.name)
-        )
-      )
+        [...prev, response.data].sort((a, b) => a.name.localeCompare(b.name)),
+      );
 
-      setSuccess(
-        "Categoría creada correctamente."
-      )
+      setSuccess("Categoría creada correctamente.");
 
-      return true
+      return true;
     } catch (error) {
-      console.error(error)
+      console.error(error);
 
       setError(
-        error.response?.data?.message ||
-        "No se pudo crear la categoría."
-      )
+        error.response?.data?.message || "No se pudo crear la categoría.",
+      );
 
-      return false
+      return false;
     } finally {
-      setCreating(false)
+      setCreating(false);
     }
-  }
+  };
 
   const handleDelete = (category) => {
-    setSelectedCategory(category)
-  }
+    setSelectedCategory(category);
+  };
 
   const confirmDelete = async () => {
     if (!selectedCategory || deleting) {
-      return
+      return;
     }
 
     try {
-      setDeleting(true)
-      setError("")
+      setDeleting(true);
+      setError("");
 
-      await deleteCategory(selectedCategory.id)
+      await deleteCategory(selectedCategory.id);
 
       setCategories((prev) =>
-        prev.filter(
-          (category) =>
-            category.id !== selectedCategory.id
-        )
-      )
+        prev.filter((category) => category.id !== selectedCategory.id),
+      );
 
-      setSuccess(
-        "Categoría eliminada correctamente."
-      )
+      setSuccess("Categoría eliminada correctamente.");
 
-      setSelectedCategory(null)
+      setSelectedCategory(null);
     } catch (error) {
-      console.error(error)
+      console.error(error);
 
       setError(
-        error.response?.data?.message ||
-        "No se pudo eliminar la categoría."
-      )
+        error.response?.data?.message || "No se pudo eliminar la categoría.",
+      );
 
-      setSelectedCategory(null)
+      setSelectedCategory(null);
     } finally {
-      setDeleting(false)
+      setDeleting(false);
     }
-  }
+  };
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">
+      {/* Encabezado */}
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
           Categorías
         </h1>
 
@@ -146,50 +132,46 @@ export default function Categories() {
         </p>
       </div>
 
+      {/* Mensajes */}
       {success && (
-        <div className="mb-6">
-          <SuccessMessage
-            message={success}
-            onClose={() => setSuccess("")}
-          />
+        <div className="mt-6">
+          <SuccessMessage message={success} onClose={() => setSuccess("")} />
         </div>
       )}
 
       {error && (
-        <div className="mb-6">
+        <div className="mt-6">
           <ErrorMessage message={error} />
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
-        <CategoryForm
-          onSubmit={handleCreate}
-          loading={creating}
-        />
+      {/* Contenido */}
+      <div className="mt-6 grid gap-6 lg:grid-cols-[360px_1fr]">
+        <CategoryForm onSubmit={handleCreate} loading={creating} />
 
         <div>
           {loading ? (
-            <Spinner />
+            <div className="flex min-h-48 items-center justify-center">
+              <Spinner />
+            </div>
           ) : categories.length === 0 ? (
             <EmptyState
               title="No hay categorías"
               message="Crea la primera categoría del inventario."
             />
           ) : (
-            <CategoryTable
-              categories={categories}
-              onDelete={handleDelete}
-            />
+            <CategoryTable categories={categories} onDelete={handleDelete} />
           )}
         </div>
       </div>
 
+      {/* Modal */}
       <Modal
         isOpen={!!selectedCategory}
         title="Eliminar categoría"
         onClose={() => {
           if (!deleting) {
-            setSelectedCategory(null)
+            setSelectedCategory(null);
           }
         }}
         footer={
@@ -197,9 +179,7 @@ export default function Categories() {
             <Button
               variant="secondary"
               disabled={deleting}
-              onClick={() =>
-                setSelectedCategory(null)
-              }
+              onClick={() => setSelectedCategory(null)}
             >
               Cancelar
             </Button>
@@ -209,21 +189,23 @@ export default function Categories() {
               disabled={deleting}
               onClick={confirmDelete}
             >
-              {deleting
-                ? "Eliminando..."
-                : "Eliminar"}
+              {deleting ? "Eliminando..." : "Eliminar"}
             </Button>
           </>
         }
       >
-        <p className="text-sm text-gray-600">
+        <p className="text-sm leading-6 text-gray-500">
           ¿Seguro que deseas eliminar la categoría{" "}
-          <strong>
+          <span className="font-medium text-gray-800">
             {selectedCategory?.name}
-          </strong>
+          </span>
           ?
+        </p>
+
+        <p className="mt-2 text-sm text-gray-500">
+          No podrás eliminarla si existen productos asociados a esta categoría.
         </p>
       </Modal>
     </div>
-  )
+  );
 }

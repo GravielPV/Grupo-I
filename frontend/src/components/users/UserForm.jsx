@@ -1,4 +1,12 @@
 import { useState } from "react";
+import {
+  Plus,
+  UserRound,
+  AtSign,
+  LockKeyhole,
+  ShieldCheck,
+} from "lucide-react";
+
 import Button from "../common/Button";
 
 export default function UserForm({ onSubmit, loading = false }) {
@@ -72,87 +80,202 @@ export default function UserForm({ onSubmit, loading = false }) {
     }
   };
 
+  const inputClass = `
+    w-full rounded-lg
+    border border-gray-300
+    px-4 py-2.5
+    text-sm text-gray-700
+    outline-none transition
+    placeholder:text-gray-400
+    focus:border-emerald-500
+    focus:ring-2 focus:ring-emerald-100
+    disabled:cursor-not-allowed
+    disabled:bg-gray-50
+  `;
+
   return (
     <form
       onSubmit={handleSubmit}
       noValidate
-      className="rounded-xl border bg-white p-6 shadow-sm"
+      className="
+        rounded-xl border border-gray-200
+        bg-white p-6 shadow-sm
+      "
     >
-      <div className="grid gap-5 md:grid-cols-2">
+      {/* Encabezado */}
+      <div className="mb-6 flex items-start gap-3">
+        <div
+          className="
+            flex h-10 w-10 shrink-0
+            items-center justify-center
+            rounded-lg bg-emerald-50
+            text-emerald-600
+          "
+        >
+          <UserRound size={20} />
+        </div>
+
         <div>
-          <label className="mb-2 block text-sm font-medium text-gray-700">
+          <h2 className="font-semibold text-gray-900">Nuevo usuario</h2>
+
+          <p className="mt-1 text-sm text-gray-500">
+            Registra un usuario y asigna su nivel de acceso.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid gap-5 md:grid-cols-2">
+        {/* Nombre */}
+        <div>
+          <label
+            htmlFor="name"
+            className="mb-2 block text-sm font-medium text-gray-700"
+          >
             Nombre
           </label>
 
-          <input
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-          />
+          <div className="relative">
+            <UserRound
+              size={18}
+              className="
+                absolute left-3 top-1/2
+                -translate-y-1/2 text-gray-400
+              "
+            />
+
+            <input
+              id="name"
+              name="name"
+              type="text"
+              value={form.name}
+              onChange={handleChange}
+              disabled={loading}
+              placeholder="Nombre completo"
+              className={`${inputClass} pl-10`}
+            />
+          </div>
 
           {errors.name && (
-            <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+            <p className="mt-1.5 text-sm text-red-600">{errors.name}</p>
           )}
         </div>
 
+        {/* Usuario */}
         <div>
-          <label className="mb-2 block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="username"
+            className="mb-2 block text-sm font-medium text-gray-700"
+          >
             Usuario
           </label>
 
-          <input
-            name="username"
-            value={form.username}
-            onChange={handleChange}
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-          />
+          <div className="relative">
+            <AtSign
+              size={18}
+              className="
+                absolute left-3 top-1/2
+                -translate-y-1/2 text-gray-400
+              "
+            />
+
+            <input
+              id="username"
+              name="username"
+              type="text"
+              value={form.username}
+              onChange={handleChange}
+              disabled={loading}
+              placeholder="Nombre de usuario"
+              autoComplete="off"
+              className={`${inputClass} pl-10`}
+            />
+          </div>
+
           {errors.username && (
-            <p className="mt-1 text-sm text-red-600">{errors.username}</p>
+            <p className="mt-1.5 text-sm text-red-600">{errors.username}</p>
           )}
         </div>
 
+        {/* Contraseña */}
         <div>
-          <label className="mb-2 block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="password"
+            className="mb-2 block text-sm font-medium text-gray-700"
+          >
             Contraseña
           </label>
 
-          <input
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-          />
+          <div className="relative">
+            <LockKeyhole
+              size={18}
+              className="
+                absolute left-3 top-1/2
+                -translate-y-1/2 text-gray-400
+              "
+            />
+
+            <input
+              id="password"
+              type="password"
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              disabled={loading}
+              placeholder="Mínimo 6 caracteres"
+              autoComplete="new-password"
+              className={`${inputClass} pl-10`}
+            />
+          </div>
 
           {errors.password && (
-            <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+            <p className="mt-1.5 text-sm text-red-600">{errors.password}</p>
           )}
         </div>
 
+        {/* Rol */}
         <div>
-          <label className="mb-2 block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="role"
+            className="mb-2 block text-sm font-medium text-gray-700"
+          >
             Rol
           </label>
 
-          <select
-            name="role"
-            value={form.role}
-            onChange={handleChange}
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-          >
-            <option value="employee">Empleado</option>
-            <option value="admin">Administrador</option>
-          </select>
+          <div className="relative">
+            <ShieldCheck
+              size={18}
+              className="
+                pointer-events-none
+                absolute left-3 top-1/2
+                -translate-y-1/2 text-gray-400
+              "
+            />
+
+            <select
+              id="role"
+              name="role"
+              value={form.role}
+              onChange={handleChange}
+              disabled={loading}
+              className={`${inputClass} pl-10`}
+            >
+              <option value="employee">Empleado</option>
+
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
 
           {errors.role && (
-            <p className="mt-1 text-sm text-red-600">{errors.role}</p>
+            <p className="mt-1.5 text-sm text-red-600">{errors.role}</p>
           )}
         </div>
       </div>
 
+      {/* Acción */}
       <div className="mt-6 flex justify-end">
         <Button type="submit" disabled={loading}>
+          {!loading && <Plus size={18} />}
+
           {loading ? "Creando..." : "Crear usuario"}
         </Button>
       </div>

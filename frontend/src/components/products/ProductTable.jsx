@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Pencil, Trash2 } from "lucide-react";
 
 import StockBadge from "./StockBadge";
 import ExpirationBadge from "./ExpirationBadge";
@@ -8,92 +9,112 @@ import { formatDate } from "../../utils/formatDate";
 
 export default function ProductTable({ products, onDelete, canManage }) {
   return (
-    <div className="mt-6 overflow-hidden rounded-xl border bg-white shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
       <div className="overflow-x-auto">
         <table className="w-full text-left">
-          <thead className="bg-gray-50 text-sm text-gray-500">
-            <tr>
+          {/* Encabezado */}
+          <thead className="border-b border-gray-200 bg-gray-50">
+            <tr className="text-xs font-semibold uppercase tracking-wide text-gray-500">
               <th className="px-5 py-4">Producto</th>
+
               <th className="px-5 py-4">Categoría</th>
+
               <th className="px-5 py-4">Precio</th>
+
               <th className="px-5 py-4">Stock</th>
+
               <th className="px-5 py-4">Vencimiento</th>
+
               {canManage && <th className="px-5 py-4 text-right">Acciones</th>}
             </tr>
           </thead>
 
-          <tbody>
-            {products.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={canManage ? 6 : 5}
-                  className="px-5 py-10 text-center text-gray-500"
-                >
-                  No se encontraron productos.
+          {/* Productos */}
+          <tbody className="divide-y divide-gray-100">
+            {products.map((product) => (
+              <tr key={product.id} className="transition hover:bg-gray-50/70">
+                {/* Producto */}
+                <td className="px-5 py-4">
+                  <p className="font-medium text-gray-900">{product.name}</p>
                 </td>
-              </tr>
-            ) : (
-              products.map((product) => (
-                <tr
-                  key={product.id}
-                  className="border-t transition hover:bg-gray-50"
-                >
-                  <td className="px-5 py-4 font-medium text-gray-800">
-                    {product.name}
-                  </td>
 
-                  <td className="px-5 py-4 text-gray-500">
+                {/* Categoría */}
+                <td className="px-5 py-4">
+                  <span className="text-sm text-gray-600">
                     {product.category}
-                  </td>
+                  </span>
+                </td>
 
-                  <td className="px-5 py-4 text-gray-500">
+                {/* Precio */}
+                <td className="whitespace-nowrap px-5 py-4">
+                  <span className="text-sm font-medium text-gray-800">
                     {formatCurrency(product.price)}
-                  </td>
+                  </span>
+                </td>
 
+                {/* Stock */}
+                <td className="px-5 py-4">
+                  <div className="flex items-center gap-3">
+                    <span className="min-w-6 text-sm font-medium text-gray-700">
+                      {product.stock}
+                    </span>
+
+                    <StockBadge stock={product.stock} />
+                  </div>
+                </td>
+
+                {/* Vencimiento */}
+                <td className="whitespace-nowrap px-5 py-4">
+                  <div className="flex flex-col items-start gap-1.5">
+                    <span className="text-sm text-gray-600">
+                      {formatDate(product.expirationDate)}
+                    </span>
+
+                    <ExpirationBadge expirationDate={product.expirationDate} />
+                  </div>
+                </td>
+
+                {/* Acciones */}
+                {canManage && (
                   <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm text-gray-700">
-                        {product.stock}
-                      </span>
+                    <div className="flex justify-end gap-1">
+                      <Link
+                        to={`/products/edit/${product.id}`}
+                        className="
+                          inline-flex h-9 w-9
+                          items-center justify-center
+                          rounded-lg text-gray-500
+                          transition
+                          hover:bg-emerald-50
+                          hover:text-emerald-600
+                        "
+                        title="Editar producto"
+                        aria-label={`Editar ${product.name}`}
+                      >
+                        <Pencil size={17} />
+                      </Link>
 
-                      <StockBadge stock={product.stock} />
+                      <button
+                        type="button"
+                        onClick={() => onDelete(product)}
+                        className="
+                          inline-flex h-9 w-9
+                          items-center justify-center
+                          rounded-lg text-gray-500
+                          transition
+                          hover:bg-red-50
+                          hover:text-red-600
+                        "
+                        title="Eliminar producto"
+                        aria-label={`Eliminar ${product.name}`}
+                      >
+                        <Trash2 size={17} />
+                      </button>
                     </div>
                   </td>
-
-                  <td className="px-5 py-4">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-sm text-gray-500">
-                        {formatDate(product.expirationDate)}
-                      </span>
-
-                      <ExpirationBadge
-                        expirationDate={product.expirationDate}
-                      />
-                    </div>
-                  </td>
-
-                  {canManage && (
-                    <td className="px-5 py-4">
-                      <div className="flex justify-end gap-2">
-                        <Link
-                          to={`/products/edit/${product.id}`}
-                          className="rounded-lg px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50"
-                        >
-                          Editar
-                        </Link>
-
-                        <button
-                          onClick={() => onDelete(product)}
-                          className="rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
-                        >
-                          Eliminar
-                        </button>
-                      </div>
-                    </td>
-                  )}
-                </tr>
-              ))
-            )}
+                )}
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
