@@ -1,0 +1,74 @@
+﻿import test from 'node:test';
+import assert from 'node:assert/strict';
+import { once } from 'node:events';
+import { MongoMemoryReplSet } from 'mongodb-memory-server';
+import { openMongoDatabase } from '../src/mongo-store.js';
+import { createApp } from '../src/app.js';
+import { hashPassword } from '../src/security.js';
+import { configuration } from '../src/config.js';
+
+test('Atlas configuration requires a URI and validates the database name', () => {
+  assert.throws(() => configuration({}), /MONGODB_URI/);
+  assert.throws(() => configuration({ MONGODB_URI: 'mongodb://localhost', MONGODB_DATABASE: 'bad/name' }));
+  assert.equal(configuration({ MONGODB_URI: 'mongodb+srv://example.test' }).databaseDriver, 'mongodb');
+  assert.equal(configuration({ MONGO_URI: 'mongodb+srv://example.test' }).mongoUri, 'mongodb+srv://example.test');
+});
+
+test('MongoDB API, transactions, persistence and inventory', { timeout: 240000 }, async (t) => {
+  const replica = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
+  t.after(() => replica.stop());
+  const config = { mongoUri: replica.getUri(), mongoDatabase: 'pharmacy_test' };
+  let store = await openMongoDatabase(config);
+  t.after(() => store.close());
+  const hash = await hashPassword('clave-prueba');
+  await store.insertUser('Admin', 'admin', hash, 'admin');
+  await store.insertUser('Employee', 'employee', hash, 'employee');
+  const app = await createApp({ store });
+  const server = app.listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  t.after(() => new Promise(resolve => server.close(resolve)));
+  const base = `http://127.0.0.1:${server.address().port}/api`;
+  async function request(path, method = 'GET', body, token) {
+    const response = await fetch(base + path, { method, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: body === undefined ? undefined : JSON.stringify(body) });
+    return { status: response.status, body: response.status === 204 ? null : await response.json() };
+  }
+  const login = async (username) => (await request('/auth/login', 'POST', { username, password: 'clave-prueba' })).body.token;
+  const token = await login('admin');
+  const employee = await login('employee');
+  assert.ok(token);
+  assert.equal((await request('/health')).status, 200);
+  assert.equal((await request('/users', 'GET', undefined, employee)).status, 403);
+  assert.equal((await request('/users/1', 'DELETE', undefined, token)).status, 409);
+  assert.equal((await request('/categories', 'POST', { name: 'Analgesicos' }, token)).status, 201);
+  assert.equal((await request('/categories', 'POST', { name: 'ANALGESICOS' }, token)).status, 409);
+  const data = { name: 'Medicamento', category: 'Analgesicos', stock: 5, price: 12.35, expirationDate: '2099-10-10' };
+  const created = await request('/products', 'POST', data, token);
+  assert.equal(created.status, 201);
+  assert.equal(created.body.price, 12.35);
+  const productId = created.body.id;
+  const { stock, ...editData } = data;
+  assert.equal((await request(`/products/${productId}`, 'PUT', { ...editData, price: 14 }, token)).status, 200);
+  assert.equal((await request(`/products/${productId}`, 'PUT', { ...data, stock: stock + 1 }, token)).status, 409);
+  assert.equal((await request('/categories/1', 'DELETE', undefined, token)).status, 409);
+  const withdrawal = { product: String(productId), type: 'salida', quantity: 4, reason: 'Venta' };
+  assert.equal((await request('/movements', 'POST', withdrawal, employee)).status, 403);
+  const concurrent = await Promise.all([request('/movements', 'POST', withdrawal, token), request('/movements', 'POST', withdrawal, token)]);
+  assert.deepEqual(concurrent.map(r => r.status).sort(), [201, 409]);
+  const history = await request(`/movements/product/${productId}`, 'GET', undefined, token);
+  assert.equal(history.body.product.stock, 1);
+  assert.equal(history.body.movements.length, 1);
+  assert.equal(history.body.movements[0].previousStock, 5);
+  assert.equal(history.body.movements[0].user.name, 'Admin');
+  await assert.rejects(store.transaction(async tx => { await tx.setStock(productId, 99); throw Error('rollback'); }));
+  assert.equal((await store.productById(productId)).stock, 1);
+  const second = await request('/users', 'POST', { name: 'Second', username: 'second', role: 'admin', password: 'clave-prueba' }, token);
+  assert.equal(second.status, 201);
+  const secondToken = await login('second');
+  const deletions = await Promise.all([request('/users/1', 'DELETE', undefined, secondToken), request(`/users/${second.body.id}`, 'DELETE', undefined, token)]);
+  assert.equal(deletions.filter(r => r.status === 204).length, 1);
+  assert.equal((await store.adminCount()).total, 1);
+  await store.close();
+  store = await openMongoDatabase(config);
+  assert.equal((await store.productById(productId)).stock, 1);
+  assert.equal((await store.listMovements()).length, 1);
+});

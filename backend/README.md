@@ -1,70 +1,39 @@
-# Backend de Tu Pharmacy
+﻿# Backend
 
-API local para las historias obligatorias del PDF `Spring Talendig - copia (1).pdf`, páginas 1–5. Node.js >=22.14, Express 5 y SQLite integrada en Node. El documento no impone tecnología backend; se eligió Node por el entorno JavaScript existente y SQLite para persistir sin instalar un servidor adicional. En Node 22.14 `node:sqlite` emite un aviso experimental. El contenido del PDF no exige Java ni Spring.
+Node.js >=22.14, Express 5 y driver oficial de MongoDB. Sigue la [guía de instalación](../README.md) para conectar Atlas e inicializar el administrador.
 
-## Ejecutar en Windows / PowerShell
+## Variables
 
-Desde la raíz del proyecto:
-
-```powershell
-cd backend
-npm ci
-Copy-Item .env.example .env
-```
-
-Edita `.env`: define `ADMIN_NAME`, `ADMIN_USERNAME` y una contraseña propia en `ADMIN_PASSWORD`. No hay credenciales predeterminadas ni usuarios de demostración. Después:
-
-```powershell
-npm run bootstrap-admin
-npm start
-```
-
-`bootstrap-admin` solo permite inicializar una base sin usuarios. No restablece claves ni sobrescribe cuentas. Después de crear el administrador, elimina `ADMIN_PASSWORD` de `.env`; el servidor no la necesita. Usa la API autenticada para crear otros usuarios. La base se crea automáticamente en `backend/data/pharmacy.sqlite`; la migración SQL se ejecuta una vez al abrirla.
-
-En otra terminal:
-
-```powershell
-cd frontend
-npm ci
-npm run dev
-```
-
-El frontend ya incluye `.env.example` con `VITE_API_URL=http://localhost:3000/api`. Si no tienes `.env`, copia ese ejemplo. Si ya existe, comprueba localmente ese valor sin sobrescribirlo. Abre `http://localhost:5173` e ingresa con el administrador creado. Si Vite elige otro puerto, añádelo a `CORS_ORIGINS` y reinicia el backend.
-
-## Configuración
-
-| Variable | Valor por defecto | Uso |
+| Variable | Valor | Uso |
 | --- | --- | --- |
+| DATABASE_DRIVER | mongodb | Almacenamiento principal |
+| MONGODB_URI | Obligatoria | URI privada de Atlas |
+| MONGODB_DATABASE | tu_pharmacy | Base de datos |
 | PORT | 3000 | Puerto HTTP |
-| HOST | 127.0.0.1 | Interfaz local |
-| DATABASE_PATH | ./data/pharmacy.sqlite | Ruta relativa al directorio desde donde arranca Node |
-| CORS_ORIGINS | http://localhost:5173 | Orígenes exactos separados por comas, sin barra final |
-| BUSINESS_TIME_ZONE | America/La_Paz | Día calendario usado para vencimientos; ajustar a la farmacia |
-| SESSION_HOURS | 8 | Duración de la sesión; mayor que 0 y hasta 168 |
+| HOST | 127.0.0.1 | Interfaz HTTP; usa 0.0.0.0 si tu alojamiento lo requiere |
+| CORS_ORIGINS | http://localhost:5173 | Orígenes exactos separados por comas |
+| BUSINESS_TIME_ZONE | America/Santo_Domingo en .env.example | Zona para vencimientos |
+| SESSION_HOURS | 8 | Duración de sesión, máximo 168 horas |
+| ADMIN_NAME / ADMIN_USERNAME / ADMIN_PASSWORD | Sin contraseña predeterminada | Inicialización del administrador |
 
-`npm start` y `npm run dev` cargan `.env`. Las variables del proceso tienen precedencia. Los archivos `.env`, bases, dependencias y herramientas de trabajo están excluidos de Git.
+## Persistencia
 
-## Arquitectura y datos
+`connect.js` selecciona el almacén. `mongo-store.js` administra un único cliente y su pool, crea índices únicos y utiliza transacciones para las operaciones relacionadas. Atlas admite las transacciones requeridas; una instalación local debe ser un replica set.
 
-- `src/app.js`: rutas HTTP, autorización, operaciones de inventario y manejo central de errores. Inyección de base y reloj para pruebas.
-- `src/security.js`: hash scrypt con sal aleatoria, comparación constante y tokens aleatorios de 256 bits. Solo se guarda SHA-256 del token de sesión.
-- `src/validation.js`: contratos de entrada y errores públicos.
-- `src/database.js`, `migrations/001_initial.sql`: persistencia SQLite, claves foráneas, restricciones, índices y versión de esquema.
-- `src/config.js`, `src/server.js`, `src/bootstrap.js`: entorno, arranque y creación inicial del administrador.
+Se conservan identificadores numéricos y los contratos del frontend. Los precios se almacenan en centavos. Las sesiones tienen un índice TTL para limpieza y se valida su vencimiento en cada petición. La eliminación o edición de cuentas revoca sus sesiones.
 
-Relaciones: `users` tiene muchas `sessions`, con eliminación en cascada; `products` es independiente. El PDF describe un vencimiento por producto, sin lotes, ventas, proveedores ni facturación. Precio almacenado como entero en centavos, representado como número en la API. Stock entero no negativo. Las operaciones de usuario que afectan al último administrador son transaccionales.
+Las transacciones toman un bloqueo de escritura común para proteger las reglas que abarcan varios documentos, incluidos el último administrador y los movimientos de stock. Esto prioriza consistencia para el volumen de una farmacia; limita la concurrencia de escrituras.
 
-## Pruebas
+`DATABASE_DRIVER=sqlite` y `DATABASE_PATH=./data/pharmacy.sqlite` conservan el modo anterior para las pruebas de regresión de usuarios y productos. Categorías y movimientos requieren MongoDB. No se transfieren automáticamente los datos SQLite a Atlas: se conserva el archivo original y Atlas usa su propia base.
 
-```powershell
-cd backend
-npm test
-```
+## API e inventario
 
-Las pruebas realizan peticiones HTTP reales a un puerto temporal, con bases aisladas, y verifican roles, sesiones, usuarios, productos, filtros, fechas, errores, CORS y persistencia. No acceden a la base de desarrollo. Consulta los resultados y pendientes en `../BACKEND_PROGRESS.md`.
+Consulta [API.md](API.md). Las categorías en uso no pueden eliminarse. El historial de movimientos guarda el nombre del producto y del usuario al registrarse y se conserva al eliminar esos registros. Para modificar existencias de un producto en MongoDB se utiliza un movimiento; editar el producto no cambia su stock.
 
-## Integración
+## Operación
 
-Los servicios existentes funcionan sin cambios: login devuelve `{token,user}`, los listados devuelven arrays, los objetos conservan nombres camelCase y roles `admin`/`employee`. Ver [API.md](API.md) para todos los contratos y [FRONTEND_INTEGRATION.md](FRONTEND_INTEGRATION.md) para los ajustes pendientes del frontend.
+El servidor solo abre el puerto después de conectar y crear los índices. Al recibir SIGINT o SIGTERM cierra HTTP y MongoDB. `npm run check-db` permite diagnosticar el acceso sin mostrar credenciales.
 
-El limitador de login es por IP, 20 intentos por 15 minutos, en memoria de una instancia; se reinicia con el proceso. No se confía en `X-Forwarded-For`. El diseño está orientado a la ejecución local del proyecto. Las sesiones sí persisten entre reinicios. La eliminación de usuarios revoca sus sesiones y cualquier edición exige volver a iniciar sesión.
+El limitador de login funciona por IP y por proceso. Para publicar la aplicación, configura HTTPS en tu alojamiento, el origen del frontend y el acceso de red de Atlas. No hay configuración de despliegue específica incluida.
+
+Documentación oficial: [conexiones del driver](https://www.mongodb.com/docs/drivers/node/current/connect/connection-targets/) y [transacciones](https://www.mongodb.com/docs/drivers/node/current/crud/transactions/).

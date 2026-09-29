@@ -46,7 +46,7 @@ export default function MovementTable({ movements }) {
               const isEntry = movement.type === "entrada";
 
               return (
-                <tr key={movement._id} className="transition hover:bg-gray-50">
+                <tr key={movement.id || movement._id} className="transition hover:bg-gray-50">
                   <td className="whitespace-nowrap px-5 py-4">
                     <div>
                       <p className="text-sm font-medium text-gray-900">

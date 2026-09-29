@@ -57,3 +57,18 @@ Errores:
 ```
 
 `message` está siempre presente; `errors` es opcional. Códigos: 400 validación o JSON inválido; 401 credenciales/sesión inválidas; 403 rol u origen no autorizado; 404 recurso/ruta inexistente; 409 username duplicado o protección del último admin; 413 cuerpo demasiado grande; 429 demasiados intentos de login (incluye Retry-After); 500 error interno sin detalles sensibles. Respuestas 204 no tienen cuerpo.
+
+## Categorías y movimientos (MongoDB)
+
+| Método | Ruta | Acceso | Respuesta |
+| --- | --- | --- | --- |
+| GET | /categories | Sesión | Array de `{id,name}` |
+| POST | /categories | Admin | 201, `{id,name}`; recibe `{name}` |
+| DELETE | /categories/:id | Admin | 204; 409 si tiene productos |
+| GET | /movements | Sesión | Array de movimientos, más recientes primero |
+| GET | /movements/product/:id | Sesión | `{product:{id,name,stock},movements:[]}` |
+| POST | /movements | Admin | 201; registra movimiento y actualiza stock |
+
+Un movimiento recibe `{product:"1",type:"entrada",quantity:5,reason:"Compra"}`. El tipo puede ser `entrada` o `salida`; la cantidad es un entero positivo. Devuelve 409 si la operación deja stock negativo o supera el máximo. Cada registro del historial incluye `id`, `product`, `user`, `type`, `quantity`, `reason`, `previousStock`, `newStock` y `createdAt`.
+
+En MongoDB, `PUT /products/:id` permite omitir `stock` para conservarlo. Si se envía un stock distinto al actual, responde 409: los cambios de existencias se registran mediante movimientos.

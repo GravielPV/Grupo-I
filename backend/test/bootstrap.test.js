@@ -14,7 +14,7 @@ test('bootstrap requires credentials, initializes once and never overwrites exis
   const backendDirectory = fileURLToPath(new URL('..', import.meta.url));
   const run = (password) => spawnSync(process.execPath, ['src/bootstrap.js'], {
     cwd: backendDirectory,
-    env: { ...process.env, DATABASE_PATH: databasePath, ADMIN_NAME: 'Initial', ADMIN_USERNAME: 'initial', ADMIN_PASSWORD: password },
+    env: { ...process.env, DATABASE_DRIVER: 'sqlite', DATABASE_PATH: databasePath, ADMIN_NAME: 'Initial', ADMIN_USERNAME: 'initial', ADMIN_PASSWORD: password },
     encoding: 'utf8', timeout: 15000,
   });
   try {

@@ -61,7 +61,7 @@ export default function MovementForm({ products, onSubmit, loading = false }) {
   };
 
   const selectedProduct = products.find(
-    (product) => product._id === form.product || product.id === form.product,
+    (product) => String(product._id || product.id) === form.product,
   );
 
   const inputClass =

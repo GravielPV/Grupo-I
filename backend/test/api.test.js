@@ -211,6 +211,6 @@ test('database persists records and migrations are idempotent', () => {
 
 test('business dates follow configured timezone, configuration rejects invalid values', () => {
   assert.equal(businessDate(new Date('2026-09-26T02:00:00Z'), 'America/La_Paz'), '2026-09-25');
-  assert.equal(configuration({}).port, 3000);
+  assert.equal(configuration({ DATABASE_DRIVER: 'sqlite',}).port, 3000);
   for (const env of [{ PORT: 'abc' }, { SESSION_HOURS: '-1' }, { CORS_ORIGINS: '*' }, { BUSINESS_TIME_ZONE: 'bad-zone' }]) assert.throws(() => configuration(env));
 });
