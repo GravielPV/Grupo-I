@@ -1,18 +1,20 @@
 export function getDaysUntilExpiration(expirationDate) {
   if (!expirationDate) {
-    return null
+    return null;
   }
 
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  const datePart = expirationDate.split("T")[0];
 
-  const expiration = new Date(expirationDate)
-  expiration.setHours(0, 0, 0, 0)
+  const [year, month, day] = datePart.split("-").map(Number);
 
-  const difference =
-    expiration.getTime() - today.getTime()
+  const expiration = new Date(year, month - 1, day);
 
-  return Math.ceil(
-    difference / (1000 * 60 * 60 * 24)
-  )
+  expiration.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const difference = expiration.getTime() - today.getTime();
+
+  return Math.ceil(difference / (1000 * 60 * 60 * 24));
 }

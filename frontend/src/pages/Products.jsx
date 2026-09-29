@@ -42,9 +42,7 @@ export default function Products() {
         setLoading(true);
         setError("");
 
-        const [productsResponse,
-          categoriesResponse
-        ] = await Promise.all([
+        const [productsResponse, categoriesResponse] = await Promise.all([
           getProducts(),
           getCategories(),
         ]);
@@ -109,7 +107,7 @@ export default function Products() {
         prev.filter((product) => product.id !== productToDelete.id),
       );
 
-      setSuccess("Producto eliminado correctamente.");
+      setSuccess("Producto desactivado correctamente.");
       setSelectedProduct(null);
     } catch (error) {
       console.error(error);
@@ -196,7 +194,7 @@ export default function Products() {
             setSelectedProduct(null);
           }
         }}
-        title="Eliminar producto"
+        title="Desactivar producto"
         footer={
           <>
             <Button
@@ -212,13 +210,13 @@ export default function Products() {
               onClick={confirmDelete}
               disabled={deleting}
             >
-              {deleting ? "Eliminando..." : "Eliminar"}
+              {deleting ? "Desactivando..." : "Desactivar"}
             </Button>
           </>
         }
       >
         <p className="text-sm leading-6 text-gray-500">
-          ¿Seguro que deseas eliminar el producto{" "}
+          ¿Seguro que deseas desactivar el producto{" "}
           <span className="font-medium text-gray-800">
             {selectedProduct?.name}
           </span>
@@ -226,7 +224,8 @@ export default function Products() {
         </p>
 
         <p className="mt-2 text-sm text-gray-500">
-          Esta acción no se puede deshacer.
+          El producto dejará de aparecer en el inventario operativo, pero
+          conservará su historial de movimientos.
         </p>
       </Modal>
     </div>

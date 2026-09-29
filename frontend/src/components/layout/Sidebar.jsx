@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
   Package,
+  ArrowLeftRight,
   Tags,
   Users,
   LogOut,
@@ -84,6 +85,11 @@ export default function Sidebar({ isOpen, onClose }) {
             <NavLink to="/products" onClick={onClose} className={linkClass}>
               <Package size={19} />
               Inventario
+            </NavLink>
+
+            <NavLink to="/movements" onClick={onClose} className={linkClass}>
+              <ArrowLeftRight size={19} />
+              Movimientos
             </NavLink>
           </div>
 

@@ -23,14 +23,15 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
 
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem("pharmacy_user");
+    const isUnauthorized = error.response?.status === 401;
 
+    const isLoginRequest = error.config?.url?.includes("/auth/login");
+
+    if (isUnauthorized && !isLoginRequest) {
+      localStorage.removeItem("pharmacy_user");
       localStorage.removeItem("pharmacy_token");
 
       window.location.href = "/login";

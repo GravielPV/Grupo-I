@@ -58,11 +58,12 @@ export default function EditProduct() {
       setSaving(true);
       setError("");
 
-      await updateProduct(id, {
-        ...formData,
-        price: Number(formData.price),
-        stock: Number(formData.stock),
-      });
+await updateProduct(id, {
+  name: formData.name,
+  category: formData.category,
+  price: Number(formData.price),
+  expirationDate: formData.expirationDate,
+});
 
       navigate("/products", {
         state: {
@@ -121,6 +122,7 @@ export default function EditProduct() {
           buttonText="Actualizar producto"
           loadingText="Actualizando..."
           loading={saving}
+          stockReadOnly
         />
       </div>
     </div>

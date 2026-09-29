@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, CircleOff  } from "lucide-react";
 
 import StockBadge from "./StockBadge";
 import ExpirationBadge from "./ExpirationBadge";
@@ -105,10 +105,10 @@ export default function ProductTable({ products, onDelete, canManage }) {
                           hover:bg-red-50
                           hover:text-red-600
                         "
-                        title="Eliminar producto"
+                        title="Desactivar producto"
                         aria-label={`Eliminar ${product.name}`}
                       >
-                        <Trash2 size={17} />
+                        <CircleOff size={17} />
                       </button>
                     </div>
                   </td>

@@ -18,6 +18,7 @@ export default function ProductForm({
   loadingText = "Guardando...",
   loading = false,
   categories = [],
+  stockReadOnly = false,
 }) {
   const navigate = useNavigate();
 
@@ -62,12 +63,14 @@ export default function ProductForm({
       newErrors.price = "El precio debe ser mayor que 0.";
     }
 
-    if (form.stock === "") {
-      newErrors.stock = "El stock es obligatorio.";
-    } else if (Number(form.stock) < 0) {
-      newErrors.stock = "El stock no puede ser negativo.";
-    } else if (!Number.isInteger(Number(form.stock))) {
-      newErrors.stock = "El stock debe ser un número entero.";
+    if (!stockReadOnly) {
+      if (form.stock === "") {
+        newErrors.stock = "El stock es obligatorio.";
+      } else if (Number(form.stock) < 0) {
+        newErrors.stock = "El stock no puede ser negativo.";
+      } else if (!Number.isInteger(Number(form.stock))) {
+        newErrors.stock = "El stock debe ser un número entero.";
+      }
     }
 
     if (!form.expirationDate) {
@@ -250,13 +253,17 @@ export default function ProductForm({
             htmlFor="stock"
             className="mb-2 block text-sm font-medium text-gray-700"
           >
-            Stock
+            {stockReadOnly ? "Stock actual" : "Stock"}
           </label>
 
           <div className="relative">
             <Boxes
               size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              className="
+        absolute left-3 top-1/2
+        -translate-y-1/2
+        text-gray-400
+      "
             />
 
             <input
@@ -265,7 +272,7 @@ export default function ProductForm({
               name="stock"
               value={form.stock}
               onChange={handleChange}
-              disabled={loading}
+              disabled={loading || stockReadOnly}
               placeholder="0"
               min="0"
               step="1"
@@ -273,11 +280,16 @@ export default function ProductForm({
             />
           </div>
 
-          {errors.stock && (
-            <p className="mt-1.5 text-sm text-red-600">{errors.stock}</p>
+          {stockReadOnly ? (
+            <p className="mt-1.5 text-xs text-gray-500">
+              El stock se modifica mediante movimientos de inventario.
+            </p>
+          ) : (
+            errors.stock && (
+              <p className="mt-1.5 text-sm text-red-600">{errors.stock}</p>
+            )
           )}
         </div>
-
         {/* Vencimiento */}
         <div>
           <label
