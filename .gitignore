@@ -1,9 +1,7 @@
 .tools/
 node_modules/
-backend/data/
-backend/.env
 frontend/.env
 frontend/dist/
 coverage/
 .env
-
+back/
