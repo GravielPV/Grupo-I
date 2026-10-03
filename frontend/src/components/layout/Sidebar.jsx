@@ -9,6 +9,7 @@ import {
   LogOut,
   X,
   Pill,
+  MapPin,
 } from "lucide-react";
 
 import useAuth from "../../context/useAuth";
@@ -108,6 +109,15 @@ export default function Sidebar({ isOpen, onClose }) {
                 >
                   <Tags size={19} />
                   Categorías
+                </NavLink>
+
+                <NavLink
+                  to="/locations"
+                  onClick={onClose}
+                  className={linkClass}
+                >
+                  <MapPin size={19} />
+                  Ubicaciones
                 </NavLink>
 
                 <NavLink to="/users" onClick={onClose} className={linkClass}>
