@@ -10,6 +10,8 @@ import Users from "../pages/Users";
 import Categories from "../pages/Categories";
 import NotFound from "../pages/NotFound";
 import Locations from "../pages/Locations";
+import NewSale from "../pages/NewSale";
+import Sales from "../pages/Sales";
 
 import MainLayout from "../components/layout/MainLayout";
 
@@ -34,6 +36,10 @@ export default function AppRouter() {
             <Route index element={<Dashboard />} />
 
             <Route path="products" element={<Products />} />
+
+            <Route path="sales" element={<Sales />} />
+
+            <Route path="sales/new" element={<NewSale />} />
 
             <Route path="movements" element={<Movements />} />
 

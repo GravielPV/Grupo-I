@@ -30,11 +30,24 @@ export default function Locations() {
   const [editingLocation, setEditingLocation] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState(null);
 
-  const loadLocations = async () => {
-    try {
-      setLoading(true);
-      setError("");
+const loadLocations = async () => {
+  try {
+    const response = await getLocations();
 
+    setLocations(response.data);
+  } catch (error) {
+    console.error(error);
+
+    setError(
+      error.response?.data?.message ||
+        "No se pudieron cargar las ubicaciones.",
+    );
+  }
+};
+
+useEffect(() => {
+  const fetchLocations = async () => {
+    try {
       const response = await getLocations();
 
       setLocations(response.data);
@@ -50,9 +63,8 @@ export default function Locations() {
     }
   };
 
-  useEffect(() => {
-    loadLocations();
-  }, []);
+  fetchLocations();
+}, []);
 
   const handleSubmit = async (formData) => {
     try {
@@ -145,6 +157,7 @@ export default function Locations() {
       )}
 
       <LocationForm
+        key={editingLocation?._id || "new-location"}
         initialData={editingLocation}
         onSubmit={handleSubmit}
         onCancel={() => setEditingLocation(null)}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { MapPin, Save } from "lucide-react";
 
 import Button from "../common/Button";
@@ -9,29 +9,13 @@ export default function LocationForm({
   loading = false,
   onCancel,
 }) {
-  const [form, setForm] = useState({
-    section: "",
-    shelf: "",
-    level: "",
-  });
+const [form, setForm] = useState(() => ({
+  section: initialData?.section || "",
+  shelf: initialData?.shelf || "",
+  level: initialData?.level || "",
+}));
 
   const [errors, setErrors] = useState({});
-
-  useEffect(() => {
-    if (initialData) {
-      setForm({
-        section: initialData.section || "",
-        shelf: initialData.shelf || "",
-        level: initialData.level || "",
-      });
-    } else {
-      setForm({
-        section: "",
-        shelf: "",
-        level: "",
-      });
-    }
-  }, [initialData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

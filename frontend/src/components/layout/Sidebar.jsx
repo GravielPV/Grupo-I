@@ -10,6 +10,8 @@ import {
   X,
   Pill,
   MapPin,
+  ShoppingCart,
+  ReceiptText,
 } from "lucide-react";
 
 import useAuth from "../../context/useAuth";
@@ -92,6 +94,24 @@ export default function Sidebar({ isOpen, onClose }) {
               <ArrowLeftRight size={19} />
               Movimientos
             </NavLink>
+          </div>
+
+          <div className="mt-8">
+            <p className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
+              Ventas
+            </p>
+
+            <div className="space-y-1">
+              <NavLink to="/sales/new" onClick={onClose} className={linkClass}>
+                <ShoppingCart size={19} />
+                Nueva venta
+              </NavLink>
+
+              <NavLink to="/sales" end onClick={onClose} className={linkClass}>
+                <ReceiptText size={19} />
+                Historial
+              </NavLink>
+            </div>
           </div>
 
           {/* Administración */}
