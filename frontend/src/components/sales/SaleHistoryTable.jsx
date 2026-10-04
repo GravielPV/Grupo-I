@@ -3,8 +3,13 @@ import { ReceiptText } from "lucide-react";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { formatDateTime } from "../../utils/formatDateTime";
 
-
 export default function SaleHistoryTable({ sales, onViewSale }) {
+  const paymentMethodLabels = {
+    cash: "Efectivo",
+    card: "Tarjeta",
+    transfer: "Transferencia",
+  };
+
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
       <div className="overflow-x-auto">
@@ -15,6 +20,7 @@ export default function SaleHistoryTable({ sales, onViewSale }) {
               <th className="px-5 py-4">Fecha</th>
               <th className="px-5 py-4">Productos</th>
               <th className="px-5 py-4">Usuario</th>
+              <th className="px-4 py-3">Pago</th>
               <th className="px-5 py-4 text-right">Total</th>
             </tr>
           </thead>
@@ -62,6 +68,13 @@ export default function SaleHistoryTable({ sales, onViewSale }) {
 
                   <td className="whitespace-nowrap px-5 py-4 text-sm text-gray-600">
                     {sale.user?.name || sale.user?.username || "Usuario"}
+                  </td>
+
+                  <td className="px-4 py-3">
+                    <span className="inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
+                      {paymentMethodLabels[sale.paymentMethod] ||
+                        "No especificado"}
+                    </span>
                   </td>
 
                   <td className="whitespace-nowrap px-5 py-4 text-right text-sm font-bold text-gray-900">

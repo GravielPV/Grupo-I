@@ -178,14 +178,14 @@ export default function Dashboard() {
         </div>
       </div>
       <div className="mb-4">
-  <h2 className="text-base font-semibold text-gray-900">
-    Estado del inventario
-  </h2>
+        <h2 className="text-base font-semibold text-gray-900">
+          Estado del inventario
+        </h2>
 
-  <p className="mt-1 text-sm text-gray-500">
-    Existencias y alertas que requieren atención.
-  </p>
-</div>
+        <p className="mt-1 text-sm text-gray-500">
+          Existencias y alertas que requieren atención.
+        </p>
+      </div>
 
       {/* Estadísticas */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
