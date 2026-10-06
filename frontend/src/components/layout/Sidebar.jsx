@@ -13,6 +13,7 @@ import {
   ShoppingCart,
   ReceiptText,
   Landmark,
+  RotateCcw,
 } from "lucide-react";
 
 import useAuth from "../../context/useAuth";
@@ -113,7 +114,11 @@ export default function Sidebar({ isOpen, onClose }) {
                 Historial
               </NavLink>
 
-              {/* Caja */}
+              <NavLink to="/returns" onClick={onClose} className={linkClass}>
+                <RotateCcw size={19} />
+                Devoluciones
+              </NavLink>
+
               <NavLink to="/cash" onClick={onClose} className={linkClass}>
                 <Landmark size={19} />
                 Caja
