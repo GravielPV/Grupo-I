@@ -14,6 +14,7 @@ import NewSale from "../pages/NewSale";
 import Sales from "../pages/Sales";
 import Cash from "../pages/Cash";
 import Returns from "../pages/Returns";
+import Settings from "../pages/Settings";
 
 import MainLayout from "../components/layout/MainLayout";
 
@@ -51,6 +52,8 @@ export default function AppRouter() {
               <Route path="categories" element={<Categories />} />
               <Route path="locations" element={<Locations />} />
               <Route path="users" element={<Users />} />
+              <Route path="/settings" element={<Settings />}/>
+              
             </Route>
           </Route>
         </Route>

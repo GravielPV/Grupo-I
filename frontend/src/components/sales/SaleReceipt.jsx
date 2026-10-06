@@ -3,6 +3,8 @@ import { Banknote, CreditCard, Printer, WalletCards } from "lucide-react";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { formatDateTime } from "../../utils/formatDateTime";
 
+import useSettings from "../../context/useSettings";
+
 const paymentLabels = {
   cash: "Efectivo",
   card: "Tarjeta",
@@ -16,6 +18,8 @@ const paymentIcons = {
 };
 
 export default function SaleReceipt({ sale, onClose }) {
+const { settings } = useSettings();
+
   if (!sale) {
     return null;
   }
@@ -35,8 +39,27 @@ export default function SaleReceipt({ sale, onClose }) {
     <div className="sale-receipt bg-white">
       {/* Encabezado */}
       <div className="text-center">
-        <h2 className="text-xl font-bold text-gray-900">Tu Pharmacy</h2>
-        <p className="mt-1 text-xs text-gray-500">Gestión Farmacéutica</p>
+<h2 className="text-xl font-bold text-gray-900">
+  {settings.pharmacyName}
+</h2>
+
+{settings.rnc && (
+  <p className="mt-1 text-xs text-gray-500">
+    RNC: {settings.rnc}
+  </p>
+)}
+
+{settings.address && (
+  <p className="mt-1 text-xs text-gray-500">
+    {settings.address}
+  </p>
+)}
+
+{settings.phone && (
+  <p className="mt-1 text-xs text-gray-500">
+    Tel: {settings.phone}
+  </p>
+)}
 
         <div className="my-4 border-t border-dashed border-gray-300" />
         <p className="text-sm font-semibold text-gray-900">
@@ -169,9 +192,9 @@ export default function SaleReceipt({ sale, onClose }) {
 
       {/* Pie */}
       <div className="py-4 text-center">
-        <p className="text-xs font-semibold text-gray-800">
-          ¡Gracias por su compra!
-        </p>
+<p className="text-xs font-semibold text-gray-800">
+  {settings.receiptMessage}
+</p>
 
         <p className="mt-1 text-[11px] text-gray-500">
           Conserve este comprobante para cualquier devolución.
