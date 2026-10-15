@@ -72,3 +72,48 @@ Errores:
 Un movimiento recibe `{product:"1",type:"entrada",quantity:5,reason:"Compra"}`. El tipo puede ser `entrada` o `salida`; la cantidad es un entero positivo. Devuelve 409 si la operación deja stock negativo o supera el máximo. Cada registro del historial incluye `id`, `product`, `user`, `type`, `quantity`, `reason`, `previousStock`, `newStock` y `createdAt`.
 
 En MongoDB, `PUT /products/:id` permite omitir `stock` para conservarlo. Si se envía un stock distinto al actual, responde 409: los cambios de existencias se registran mediante movimientos.
+
+## Red de farmacias, artículos, fotos y tarjeta simulada (MongoDB)
+
+Las peticiones autenticadas pueden enviar `X-Pharmacy-Id`, con valor predeterminado `1`. Productos, ubicaciones, movimientos, configuración, caja, ventas y devoluciones se filtran por esa farmacia. Las cuentas y categorías pertenecen a la red compartida.
+
+| Método | Ruta | Contrato |
+| --- | --- | --- |
+| GET | /pharmacies | Farmacias de la red |
+| POST | /pharmacies | Admin; `{name,address,phone}` |
+| GET | /availability?search=... | `{updatedAt,articles:[{code,name,imageUrl,category,pharmacies:[]}]}`; disponibilidad de toda la red |
+| POST | /images | Admin; archivo binario con Content-Type image/jpeg, image/png o image/webp, máximo 3 MB; devuelve `{imageUrl}` |
+| GET | /images/:key | Foto por identificador aleatorio, sin token |
+| POST | /card-payments | `{testCard,items:[{product,quantity}]}`; testCard: approved, declined o insufficient. 201 aprobado, 402 rechazado |
+
+Los productos reciben `code`, `imageUrl`, `pharmacyId` y `availableStock`. El código es único para el artículo compartido e inmutable; solo hay un registro de ese código por farmacia. La foto se carga antes de guardar el producto. La disponibilidad excluye lotes vencidos aunque estos sigan formando parte del stock total.
+
+POST /sales con paymentMethod card exige paymentId aprobado, del mismo usuario/farmacia/caja y carrito. Caduca en cinco minutos y solo se consume una vez. El resultado incluye payment con simulated, reference, authorizationCode, brand, last4, amount y status. No se reciben números de tarjeta ni CVV. Rechazos y errores no descuentan stock. Las devoluciones con tarjeta incluyen refundReference y las anulaciones registran un reverso simulado. No existe conexión con bancos ni cargos reales.
+
+## Ventas, caja, devoluciones y configuración (MongoDB)
+
+Todas las rutas requieren sesión. `PATCH` está permitido en las solicitudes CORS.
+
+| Método | Ruta | Acceso / datos |
+| --- | --- | --- |
+| GET / PUT | /settings | Lectura con sesión; escritura admin. Campos: pharmacyName, rnc, phone, email, address, receiptMessage, currency, currencySymbol |
+| GET / POST | /locations | Lectura con sesión; creación admin con section, shelf, level |
+| PUT / DELETE | /locations/:id | Admin; no se elimina una ubicación con productos |
+| GET | /batches | Lotes de todos los productos |
+| GET | /batches/product/:id | Lotes del producto |
+| POST | /batches | Admin: product, batchNumber, stock, expirationDate; registra entrada |
+| GET / POST | /sales | Historial; creación con items:[{product,quantity}], paymentMethod, amountReceived |
+| PATCH | /sales/:id/cancel | Admin; caja de la venta abierta y sin devoluciones |
+| GET / POST | /returns | Historial; creación admin con saleId, items:[{productId,quantity}], reason, refundMethod |
+| GET | /returns/sale/:id | Devoluciones de una venta |
+| GET | /cash-sessions | Historial de cajas |
+| GET | /cash-sessions/current | Caja abierta y summary; null si no existe |
+| GET | /cash-sessions/:id | Detalle y totales de una caja |
+| POST | /cash-sessions/open | openingAmount; 409 si ya existe una caja abierta |
+| POST | /cash-sessions/close | countedCash; cierra el usuario que abrió o un admin |
+
+Medios de pago/reembolso: cash, card, transfer. Las cantidades son enteros positivos. Los importes se validan a dos decimales y se calculan en centavos. La venta requiere caja abierta; el servidor calcula precios, total y cambio. Los lotes vencidos se excluyen de las ventas. Los conflictos de stock, devoluciones excesivas y transiciones de caja inválidas responden 409.
+
+Los recursos nuevos incluyen id numérico, _id como cadena y createdAt. Los productos añaden _id y location como objeto o null. POST/PUT de producto acepta location como identificador. Los movimientos aceptan batch para aplicar la variación a un lote concreto.
+
+El cierre devuelve salesCount, unitsSold, totalSales, cashSales, cardSales, transferSales, returnsCount, totalRefunds, cashRefunds, cardRefunds, transferRefunds, expectedCash, countedCash y difference, además de los datos de apertura/cierre. La caja abierta incluye sus totales actuales dentro de summary. El cierre conserva los totales históricos. Véase FRONTEND_INTEGRATION.md para las reglas de anulación, devoluciones y conservación de historial.

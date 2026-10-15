@@ -101,6 +101,7 @@ export default function Products() {
       : "";
 
     const matchesSearch =
+      product.code?.toLowerCase().includes(normalizedSearch) ||
       product.name.toLowerCase().includes(normalizedSearch) ||
       locationCode.includes(normalizedSearch);
 

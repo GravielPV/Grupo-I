@@ -1,5 +1,7 @@
 ﻿import { MongoClient } from 'mongodb';
 
+import { generatedCode } from './product-assets.js';
+
 export async function openMongoDatabase({ mongoUri, mongoDatabase }) {
   const client = new MongoClient(mongoUri, { serverSelectionTimeoutMS: 10000, maxPoolSize: 20 });
   try {
@@ -7,7 +9,7 @@ export async function openMongoDatabase({ mongoUri, mongoDatabase }) {
     const db = client.db(mongoDatabase);
     await db.command({ ping: 1 });
     await db.collection('users').createIndex({ username: 1 }, { unique: true });
-    for (const name of ['users', 'products', 'categories', 'movements']) {
+    for (const name of ['users', 'products', 'categories', 'movements', 'locations', 'sales', 'returns', 'cash_sessions', 'batches', 'pharmacies', 'articles', 'images', 'card_payments']) {
       await db.collection(name).createIndex({ id: 1 }, { unique: true });
     }
     await db.collection('sessions').createIndex({ token_hash: 1 }, { unique: true });
@@ -15,6 +17,11 @@ export async function openMongoDatabase({ mongoUri, mongoDatabase }) {
     await db.collection('sessions').createIndex({ user_id: 1 });
     await db.collection('categories').createIndex({ key: 1 }, { unique: true });
     await db.collection('movements').createIndex({ 'product.id': 1, id: -1 });
+    await db.collection('articles').createIndex({ code: 1 }, { unique: true });
+    await db.collection('images').createIndex({ key: 1 }, { unique: true });
+    await db.collection('products').createIndex({ pharmacyId: 1, code: 1 }, { unique: true, partialFilterExpression: { code: { $type: 'string' }, pharmacyId: { $type: 'number' } } });
+    await db.collection('pharmacies').updateOne({ id: 1 }, { $setOnInsert: { name: 'Farmacia principal', address: '', phone: '', created_at: new Date().toISOString() } }, { upsert: true });
+    await db.collection('counters').updateOne({ _id: 'pharmacies' }, { $max: { value: 1 } }, { upsert: true });
     await db.collection('locks').updateOne({ _id: 'writes' }, { $setOnInsert: { version: 0 } }, { upsert: true });
     function store(session) {
       const options = session ? { session } : {};
@@ -29,6 +36,13 @@ export async function openMongoDatabase({ mongoUri, mongoDatabase }) {
         return { lastInsertRowid: row.id };
       };
       return {
+        listRecords: (name, filter = {}) => list(name, filter, { id: -1 }),
+        recordById: (name, id) => find(name, { id }),
+        insertRecord: (name, data) => insert(name, data),
+        updateRecord: (name, id, data) => collection(name).updateOne({ id }, { $set: data }, options),
+        deleteRecord: (name, id) => remove(name, { id }),
+        getSettings: (pharmacyId = 1) => find('settings', { _id: pharmacyId === 1 ? 'pharmacy' : `pharmacy-${pharmacyId}` }),
+        saveSettings: (data, pharmacyId = 1) => collection('settings').updateOne({ _id: pharmacyId === 1 ? 'pharmacy' : `pharmacy-${pharmacyId}` }, { $set: data }, { ...options, upsert: true }),
         health: () => db.command({ ping: 1 }),
         userByUsername: (username) => find('users', { username }),
         userById: (id) => find('users', { id }),
@@ -72,6 +86,16 @@ export async function openMongoDatabase({ mongoUri, mongoDatabase }) {
         close: () => client.close(),
       };
     }
-    return store();
+    const ready = store();
+    if ((await ready.listRecords('products', { code: { $exists: false } })).length) {
+      await ready.transaction(async tx => {
+        for (const p of await tx.listRecords('products', { code: { $exists: false } })) {
+          const code = generatedCode(p.id);
+          if (!(await tx.listRecords('articles', { code })).length) await tx.insertRecord('articles', { code, name: p.name });
+          await tx.updateRecord('products', p.id, { code, pharmacyId: p.pharmacyId ?? 1, imageUrl: p.imageUrl ?? '' });
+        }
+      });
+    }
+    return ready;
   } catch (error) { await client.close(); throw error; }
 }

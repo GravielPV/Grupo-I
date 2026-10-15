@@ -60,6 +60,8 @@ export default function EditProduct() {
 
 await updateProduct(id, {
   name: formData.name,
+  code: formData.code,
+  imageUrl: formData.imageUrl,
   category: formData.category,
   price: Number(formData.price),
   expirationDate: formData.expirationDate,

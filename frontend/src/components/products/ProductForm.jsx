@@ -12,6 +12,8 @@ import {
 import { getLocations } from "../../services/locationService";
 
 import Button from "../common/Button";
+import ProductImage from './ProductImage';
+import { uploadProductImage } from '../../services/pharmacyService';
 
 export default function ProductForm({
   initialData = {},
@@ -26,8 +28,10 @@ export default function ProductForm({
 
   const [form, setForm] = useState({
     name: initialData.name || "",
+    code: initialData.code || '',
+    imageUrl: initialData.imageUrl || '',
     category: initialData.category || "",
-    price: initialData.price || "",
+    price: initialData.price ?? "",
     stock: initialData.stock ?? "",
     expirationDate: initialData.expirationDate || "",
     location:
@@ -37,6 +41,22 @@ export default function ProductForm({
   });
 
   const [locations, setLocations] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const [imageError, setImageError] = useState('');
+  const uploadImage = async event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setImageError('');
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 3 * 1024 * 1024) {
+      setImageError('Selecciona una foto JPG, PNG o WebP de hasta 3 MB.'); return;
+    }
+    setUploading(true);
+    try {
+      const response = await uploadProductImage(file);
+      setForm(current => ({ ...current, imageUrl: response.data.imageUrl }));
+    } catch (error) { setImageError(error.response?.data?.message || 'No se pudo subir la foto.'); }
+    finally { setUploading(false); event.target.value = ''; }
+  };
   const [locationsLoading, setLocationsLoading] = useState(true);
 
   useEffect(() => {
@@ -87,8 +107,8 @@ export default function ProductForm({
 
     if (form.price === "") {
       newErrors.price = "El precio es obligatorio.";
-    } else if (Number(form.price) <= 0) {
-      newErrors.price = "El precio debe ser mayor que 0.";
+    } else if (!Number.isFinite(Number(form.price)) || Number(form.price) < 0) {
+      newErrors.price = "El precio debe ser mayor o igual que 0.";
     }
 
     if (!stockReadOnly) {
@@ -121,6 +141,7 @@ export default function ProductForm({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (uploading) return;
 
     const isValid = validateForm();
 
@@ -153,6 +174,24 @@ export default function ProductForm({
       noValidate
       className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
     >
+      <div className="mb-6 grid gap-5 rounded-xl bg-slate-50 p-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="article-code" className="mb-2 block text-sm font-medium">Código único del artículo</label>
+          <input id="article-code" value={form.code} disabled={Boolean(initialData.id) || loading} maxLength={40} placeholder="Automático al guardar, o escribe tu código" onChange={e => setForm(current => ({ ...current, code: e.target.value.toUpperCase() }))} className={getInputClass(false)} />
+          <p className="mt-2 text-xs text-slate-500">Usa el mismo código en todas las farmacias para el mismo artículo. No cambia después de crearlo.</p>
+        </div>
+        <div>
+          <label htmlFor="product-photo" className="mb-2 block text-sm font-medium">Foto del producto</label>
+          <div className="flex items-center gap-3">
+            <ProductImage imageUrl={form.imageUrl} name={form.name} className="h-20 w-20" />
+            <div><input id="product-photo" type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading || loading} onChange={uploadImage} className="max-w-full text-xs" />
+              <p className="mt-2 text-xs text-slate-500">{uploading ? 'Subiendo foto…' : 'JPG, PNG o WebP. Máximo 3 MB.'}</p>
+              {form.imageUrl && <button type="button" disabled={uploading || loading} onClick={() => setForm(current => ({ ...current, imageUrl: '' }))} className="mt-1 text-xs text-red-600">Quitar foto</button>}
+            </div>
+          </div>
+          {imageError && <p role="alert" className="mt-2 text-sm text-red-600">{imageError}</p>}
+        </div>
+      </div>
       {/* Encabezado */}
       <div className="mb-6 flex items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
@@ -269,6 +308,7 @@ export default function ProductForm({
               </option>
             ))}
           </select>
+          {!locationsLoading && locations.length === 0 && <p className="mt-2 text-sm text-amber-700">Primero crea una ubicación en el menú «Ubicaciones» para asignar el producto.</p>}
           {errors.location && (
             <p className="mt-1.5 text-sm text-red-600">{errors.location}</p>
           )}

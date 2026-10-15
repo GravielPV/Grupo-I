@@ -7,6 +7,8 @@ import ExpirationBadge from "./ExpirationBadge";
 import useCurrency from "../../hooks/useCurrency";
 import { formatDate } from "../../utils/formatDate";
 
+import ProductImage from './ProductImage';
+
 export default function ProductTable({ products, onDelete, canManage }) {
 const { formatCurrency } = useCurrency();
 
@@ -39,7 +41,7 @@ const { formatCurrency } = useCurrency();
               <tr key={product.id} className="transition hover:bg-gray-50/70">
                 {/* Producto */}
                 <td className="px-5 py-4">
-                  <p className="font-medium text-gray-900">{product.name}</p>
+                  <div className="flex items-center gap-3"><ProductImage imageUrl={product.imageUrl} name={product.name} /><div><p className="font-medium text-gray-900">{product.name}</p><p className="mt-1 font-mono text-xs text-slate-500">{product.code}</p></div></div>
                 </td>
 
                 {/* Categoría */}

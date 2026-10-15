@@ -87,6 +87,7 @@ export default function Sidebar({ isOpen, onClose }) {
           </p>
 
           <div className="space-y-1">
+            <NavLink to="/pharmacies" onClick={onClose} className={linkClass}><Landmark size={19} />Red de farmacias</NavLink>
             <NavLink to="/" end onClick={onClose} className={linkClass}>
               <LayoutDashboard size={19} />
               Dashboard

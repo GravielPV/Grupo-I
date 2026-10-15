@@ -70,6 +70,7 @@ const { formatCurrency } = useCurrency();
         <p className="mt-1 text-xs text-gray-500">{sale.saleNumber}</p>
       </div>
 
+      {sale.payment?.simulated && <div className="my-4 rounded-lg border border-dashed border-amber-300 bg-amber-50 p-3 text-xs"><p className="font-bold">PAGO DE TARJETA SIMULADO · SIN CARGO REAL</p><p className="mt-2">{sale.payment.brand} · •••• {sale.payment.last4}</p><p>Autorización: {sale.payment.authorizationCode}</p><p className="mt-1 break-all font-mono">{sale.payment.reference}</p></div>}
       {/* Datos */}
       <div className="my-4 space-y-1.5 text-xs">
         <div className="flex justify-between gap-4">
@@ -111,6 +112,7 @@ const { formatCurrency } = useCurrency();
             <p className="text-xs font-semibold text-gray-900">
               {item.productName}
             </p>
+            {item.productCode && <p className="font-mono text-[10px] text-slate-500">{item.productCode}</p>}
 
             <div className="mt-1 flex justify-between gap-4 text-xs">
               <span className="text-gray-500">

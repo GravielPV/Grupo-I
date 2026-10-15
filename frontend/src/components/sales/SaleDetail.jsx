@@ -19,7 +19,11 @@ import SaleReceipt from "./SaleReceipt";
 
 import { createReturn, getReturnsBySale } from "../../services/returnService";
 
+import useAuth from "../../context/useAuth";
+
 export default function SaleDetail({ sale, onCancelSale, cancelling = false }) {
+  const { user } = useAuth();
+  const canManage = user?.role === "admin";
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
   const [showReturnForm, setShowReturnForm] = useState(false);
   const [previousReturns, setPreviousReturns] = useState([]);
@@ -315,6 +319,7 @@ export default function SaleDetail({ sale, onCancelSale, cancelling = false }) {
         </div>
       </div>
 
+      {sale.payment?.simulated && <div className="mt-5 rounded-lg bg-amber-50 p-4 text-sm text-amber-900"><p className="font-semibold">Tarjeta de demostración · Pago simulado</p><p className="mt-1">{sale.payment.brand} •••• {sale.payment.last4} · Autorización {sale.payment.authorizationCode}</p><p className="mt-1 break-all text-xs">{sale.payment.reference}</p></div>}
       {/* Total */}
       <div className="mt-5 flex justify-end">
         <div
@@ -342,7 +347,7 @@ export default function SaleDetail({ sale, onCancelSale, cancelling = false }) {
         </div>
       </div>
       {/* Devoluciones */}
-      {!isCancelled && (
+      {canManage && !isCancelled && (
         <div className="mt-6 border-t border-gray-200 pt-5">
           {returnError && (
             <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -393,7 +398,7 @@ export default function SaleDetail({ sale, onCancelSale, cancelling = false }) {
       )}
 
       {/* Anular venta */}
-      {!isCancelled && !isCashSessionClosed && (
+      {canManage && !isCancelled && !isCashSessionClosed && (
         <div className="mt-6 border-t border-gray-200 pt-5">
           {!showCancelConfirmation ? (
             <button

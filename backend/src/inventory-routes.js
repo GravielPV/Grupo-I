@@ -1,5 +1,8 @@
 ﻿import { ApiError, bad, object, text, id } from './validation.js';
 
+import { changeStock } from './stock.js';
+import { belongsTo, pharmacyFilter } from './pharmacies.js';
+
 export function inventoryRoutes(app, store, admin) {
   const category = (row) => ({ id: row.id, name: row.name });
   const movement = (row) => ({ id: row.id, product: row.product, user: row.user, type: row.type, quantity: row.quantity, reason: row.reason, previousStock: row.previousStock, newStock: row.newStock, createdAt: row.created_at });
@@ -24,10 +27,10 @@ export function inventoryRoutes(app, store, admin) {
     });
     res.sendStatus(204);
   });
-  app.get('/api/movements', async (req, res) => res.json((await store.listMovements()).map(movement)));
+  app.get('/api/movements', async (req, res) => res.json((await store.listRecords('movements', pharmacyFilter(req.pharmacyId))).map(movement)));
   app.get('/api/movements/product/:id', async (req, res) => {
     const product = await store.productById(id(req.params.id));
-    if (!product) throw new ApiError(404, 'Producto no encontrado.');
+    if (!belongsTo(product, req.pharmacyId)) throw new ApiError(404, 'Producto no encontrado.');
     res.json({ product: { id: product.id, name: product.name, stock: product.stock }, movements: (await store.listMovements(product.id)).map(movement) });
   });
   app.post('/api/movements', admin, async (req, res) => {
@@ -41,12 +44,12 @@ export function inventoryRoutes(app, store, admin) {
       const user = await tx.userById(req.user.id);
       if (user?.role !== 'admin') throw new ApiError(403, 'Se requiere el rol administrador.');
       const product = await tx.productById(productId);
-      if (!product) throw new ApiError(404, 'Producto no encontrado.');
+      if (!belongsTo(product, req.pharmacyId)) throw new ApiError(404, 'Producto no encontrado.');
       const stock = product.stock + (type === 'entrada' ? quantity : -quantity);
       if (stock < 0 || stock > 2147483647) throw new ApiError(409, 'El movimiento excede el stock disponible o el máximo permitido.');
-      const data = { product: { id: product.id, name: product.name, category: product.category }, user: { id: user.id, name: user.name, username: user.username }, type, quantity, reason, previousStock: product.stock, newStock: stock };
+      const data = { pharmacyId: req.pharmacyId, product: { id: product.id, name: product.name, category: product.category }, user: { id: user.id, name: user.name, username: user.username }, type, quantity, reason, previousStock: product.stock, newStock: stock };
       const inserted = await tx.insertMovement(data);
-      await tx.setStock(productId, stock);
+      await changeStock(tx, productId, type === 'entrada' ? quantity : -quantity, { batchId: req.body.batch, pharmacyId: req.pharmacyId });
       return { ...data, id: inserted.lastInsertRowid };
     });
     res.status(201).json(result);

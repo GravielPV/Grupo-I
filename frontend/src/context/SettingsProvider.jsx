@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import SettingsContext from "./SettingsContext";
 import { getSettings } from "../services/settingsService";
+import useAuth from "./useAuth";
 
 const DEFAULT_SETTINGS = {
   pharmacyName: "Tu Pharmacy",
@@ -15,6 +16,7 @@ const DEFAULT_SETTINGS = {
 };
 
 export default function SettingsProvider({ children }) {
+  const { isAuthenticated } = useAuth();
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
 
   const [loadingSettings, setLoadingSettings] = useState(true);
@@ -36,11 +38,15 @@ export default function SettingsProvider({ children }) {
     } finally {
       setLoadingSettings(false);
     }
-  }, );
+  }, []);
 
   useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
+    if (isAuthenticated) {
+      // Sincroniza la configuracion con la API al iniciar sesion; las actualizaciones esperan la peticion.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      loadSettings();
+    }
+  }, [isAuthenticated, loadSettings]);
 
   const updateLocalSettings = (newSettings) => {
     setSettings((current) => ({
@@ -52,8 +58,8 @@ export default function SettingsProvider({ children }) {
   return (
     <SettingsContext.Provider
       value={{
-        settings,
-        loadingSettings,
+        settings: isAuthenticated ? settings : DEFAULT_SETTINGS,
+        loadingSettings: isAuthenticated && loadingSettings,
         reloadSettings: loadSettings,
         updateLocalSettings,
       }}

@@ -61,6 +61,22 @@ Las pruebas MongoDB usan un replica set temporal aislado y no acceden a Atlas. L
 - Inicio y cierre de sesión, usuarios y roles.
 - Productos, búsquedas, categorías y alertas de inventario.
 - Entradas y salidas con historial y actualización transaccional del stock.
+- Ubicaciones de productos y lotes con stock y vencimiento.
+- Ventas con caja abierta, medios de pago, anulación y devoluciones parciales.
+- Apertura y cierre de caja con totales por medio de pago y conciliación de efectivo.
+- Configuración persistente de la farmacia, comprobantes y moneda.
 - Contraseñas con scrypt y sesiones persistentes con token almacenado como hash.
 
 Consulta [la configuración del backend](backend/README.md) y [el contrato de la API](backend/API.md).
+
+Para comprobar los flujos completos de las pantallas, ejecuta también `node --test frontend/test/dashboard.test.js`. Las pruebas del backend incluyen ventas, devoluciones, caja, ubicaciones y lotes en una base temporal; no modifican Atlas. Consulta [la integración actual](backend/FRONTEND_INTEGRATION.md).
+
+## Farmacias, artículos, fotos y pagos de prueba
+
+1. Abre **Red de farmacias** para crear otro establecimiento. Elige la **Farmacia activa** en la cabecera; inventario, ubicaciones, ventas y caja son independientes. Los datos anteriores permanecen en **Farmacia principal**.
+2. Al crear un producto, escribe su código o deja que se genere automáticamente. El mismo artículo utiliza el mismo código en todas las farmacias. Desde la red, **Agregar a mi farmacia** precarga el artículo; sus existencias se registran por separado. La disponibilidad se actualiza cada 30 segundos y excluye lotes vencidos.
+3. En agregar/editar producto, selecciona una foto **JPG, PNG o WebP de hasta 3 MB**. Se muestra en inventario y en el buscador de ventas; se guarda en MongoDB.
+4. Abre caja, agrega productos y elige **Tarjeta**. El terminal permite simular aprobación, rechazo y fondos insuficientes. Tras aprobar, pulsa **Registrar venta aprobada** para emitir el comprobante. No hay cargos reales ni conexión bancaria.
+5. Para devolver, entra en **Devoluciones → Buscar venta para devolver**, abre la venta y pulsa **Registrar devolución**. Selecciona cantidades, motivo y medio de reembolso. Requiere administrador y caja abierta en la misma farmacia. Una devolución con tarjeta emite una referencia de reembolso simulado.
+
+Las farmacias funcionan como establecimientos de una misma red en este servidor; las cuentas y roles son compartidos. El despliegue para acceso desde otros equipos no está incluido en esta configuración local.

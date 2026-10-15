@@ -21,9 +21,6 @@ export default function MovementForm({ products, onSubmit, loading = false }) {
     let cancelled = false;
 
     const loadBatches = async () => {
-      setBatches([]);
-      setForm((prev) => ({ ...prev, batch: "" }));
-
       if (!form.product) return;
 
       try {

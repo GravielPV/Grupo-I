@@ -5,6 +5,7 @@ import { Banknote, LockOpen } from "lucide-react";
 import useCurrency from "../../hooks/useCurrency";
 
 export default function OpenCashForm({ onOpen, loading = false }) {
+  const { formatCurrency } = useCurrency();
   const [openingAmount, setOpeningAmount] = useState("");
 
   const handleSubmit = async (event) => {

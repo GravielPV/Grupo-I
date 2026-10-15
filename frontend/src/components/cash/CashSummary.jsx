@@ -10,6 +10,7 @@ import {
 import useCurrency from "../../hooks/useCurrency";
 
 export default function CashSummary({ summary }) {
+  const { formatCurrency } = useCurrency();
   if (!summary) {
     return null;
   }

@@ -15,6 +15,7 @@ import Sales from "../pages/Sales";
 import Cash from "../pages/Cash";
 import Returns from "../pages/Returns";
 import Settings from "../pages/Settings";
+import Pharmacies from '../pages/Pharmacies';
 
 import MainLayout from "../components/layout/MainLayout";
 
@@ -39,6 +40,7 @@ export default function AppRouter() {
             <Route index element={<Dashboard />} />
 
             <Route path="products" element={<Products />} />
+            <Route path="pharmacies" element={<Pharmacies />} />
             <Route path="sales" element={<Sales />} />
             <Route path="/returns" element={<Returns />} />
             <Route path="sales/new" element={<NewSale />} />

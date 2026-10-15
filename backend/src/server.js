@@ -8,7 +8,10 @@ try {
   store = await connectDatabase(config);
   const app = await createApp({ ...config, store });
   const server = app.listen(config.port, config.host, () => console.log(`Pharmacy API: http://${config.host}:${config.port}/api (${config.databaseDriver})`));
-  server.on('error', async () => { console.error('No se pudo abrir el puerto HTTP.'); await store.close(); process.exitCode = 1; });
+  server.on('error', async (error) => {
+    console.error(error.code === 'EADDRINUSE' ? `El puerto ${config.port} ya está ocupado. Detén la otra instancia del backend antes de iniciar otra.` : `No se pudo abrir el puerto HTTP (${error.code ?? error.name}).`);
+    await store.close(); process.exitCode = 1;
+  });
   for (const signal of ['SIGINT', 'SIGTERM']) process.once(signal, () => {
     const timeout = setTimeout(() => process.exit(1), 10000).unref();
     server.close(async () => { await store.close(); clearTimeout(timeout); });

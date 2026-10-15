@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import AuthContext from "./AuthContext";
 
-import { login as loginRequest } from "../services/authService";
+import { login as loginRequest, logout as logoutRequest } from "../services/authService";
 
 export default function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
@@ -28,6 +28,15 @@ export default function AuthProvider({ children }) {
   });
 
   const loading = false;
+
+  useEffect(() => {
+    const clearSession = () => {
+      setUser(null);
+      setToken(null);
+    };
+    window.addEventListener("pharmacy:session-expired", clearSession);
+    return () => window.removeEventListener("pharmacy:session-expired", clearSession);
+  }, []);
 
   const login = async (username, password) => {
     try {
@@ -58,6 +67,7 @@ export default function AuthProvider({ children }) {
   };
 
   const logout = () => {
+    if (token) logoutRequest(token).catch(() => {});
     localStorage.removeItem("pharmacy_user");
 
     localStorage.removeItem("pharmacy_token");
@@ -74,7 +84,7 @@ export default function AuthProvider({ children }) {
         loading,
         login,
         logout,
-        isAuthenticated: !!user,
+        isAuthenticated: !!user && !!token,
       }}
     >
       {children}

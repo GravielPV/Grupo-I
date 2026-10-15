@@ -5,3 +5,9 @@ frontend/dist/
 coverage/
 .env
 back/
+.env.*
+!**/.env.example
+**/*.sqlite
+**/*.sqlite-*
+Microsoft/
+*.log

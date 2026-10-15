@@ -22,8 +22,7 @@ import ExpirationAlerts from "../components/dashboard/ExpirationAlerts";
 import Spinner from "../components/common/Spinner";
 import ErrorMessage from "../components/common/ErrorMessage";
 
-import { getProducts } from "../services/productService";
-import { getSales } from "../services/saleService";
+import { loadDashboardData } from "../services/dashboardService";
 
 import { getDaysUntilExpiration } from "../utils/expiration";
 import useCurrency from "../hooks/useCurrency";
@@ -36,6 +35,7 @@ import {
 export default function Dashboard() {
   const [products, setProducts] = useState([]);
   const [sales, setSales] = useState([]);
+  const [salesError, setSalesError] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -47,13 +47,10 @@ export default function Dashboard() {
         setLoading(true);
         setError("");
 
-        const [productsResponse, salesResponse] = await Promise.all([
-          getProducts(),
-          getSales(),
-        ]);
-
-        setProducts(productsResponse.data);
-        setSales(salesResponse.data);
+        const data = await loadDashboardData();
+        setProducts(data.products);
+        setSales(data.sales);
+        setSalesError(data.salesError);
       } catch (error) {
         console.error(error);
 
@@ -208,6 +205,8 @@ export default function Dashboard() {
       </div>
 
       {/* ACTIVIDAD COMERCIAL */}
+      {salesError && <div role="status" className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">{salesError}</div>}
+      {!salesError && <>
       <div className="mb-8">
         <div className="mb-4">
           <h2 className="text-base font-semibold text-gray-900">
@@ -444,6 +443,7 @@ export default function Dashboard() {
       </div>
 
       {/* INVENTARIO */}
+      </>}
       <div className="mb-4">
         <h2 className="text-base font-semibold text-gray-900">
           Estado del inventario

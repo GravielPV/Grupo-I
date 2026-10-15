@@ -7,6 +7,7 @@ import ReturnHistoryTable from "../components/returns/ReturnHistoryTable";
 import ReturnDetail from "../components/returns/ReturnDetail";
 
 import { getReturns } from "../services/returnService";
+import { Link } from 'react-router-dom';
 import useCurrency from "../hooks/useCurrency";
 
 export default function Returns() {
@@ -79,6 +80,7 @@ export default function Returns() {
         </p>
       </div>
 
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4"><p className="text-sm text-emerald-900">Para devolver productos, abre su venta en el historial y selecciona «Registrar devolución».</p><Link to="/sales" className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">Buscar venta para devolver</Link></div>
       {/* Resumen */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">

@@ -1,6 +1,7 @@
 import { Search, Plus, MapPin } from "lucide-react";
 
 import useCurrency from "../../hooks/useCurrency";
+import ProductImage from '../products/ProductImage';
 
 export default function SaleProductSearch({
   products,
@@ -12,7 +13,7 @@ export default function SaleProductSearch({
   const { formatCurrency } = useCurrency();
 
   const filteredProducts = products
-    .filter((product) => product.stock > 0)
+    .filter((product) => product.stock > 0 && product.availableForSale !== false)
     .filter((product) => {
       if (!normalizedSearch) {
         return true;
@@ -24,6 +25,7 @@ export default function SaleProductSearch({
 
       return (
         product.name.toLowerCase().includes(normalizedSearch) ||
+        product.code?.toLowerCase().includes(normalizedSearch) ||
         locationCode.includes(normalizedSearch)
       );
     });
@@ -79,10 +81,12 @@ export default function SaleProductSearch({
                   p-3 transition hover:bg-gray-50
                 "
               >
-                <div className="min-w-0">
+                <ProductImage imageUrl={product.imageUrl} name={product.name} />
+                <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-gray-800">
                     {product.name}
                   </p>
+                  <p className="mt-1 font-mono text-xs text-slate-400">{product.code}</p>
 
                   <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
                     <span>{formatCurrency(product.price)}</span>

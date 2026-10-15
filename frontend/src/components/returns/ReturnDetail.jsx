@@ -55,6 +55,7 @@ const { formatCurrency } = useCurrency();
         </div>
       </div>
 
+      {returnRecord.refundReference && <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"><p className="font-semibold">Reembolso a tarjeta simulado · Sin movimiento bancario real</p><p className="mt-2 break-all font-mono text-xs">{returnRecord.refundReference}</p></div>}
       {/* Datos generales */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-xl bg-gray-50 p-4">

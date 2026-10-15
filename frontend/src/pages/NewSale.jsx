@@ -3,6 +3,9 @@ import { ShoppingCart } from "lucide-react";
 
 import SaleProductSearch from "../components/sales/SaleProductSearch";
 import SaleCart from "../components/sales/SaleCart";
+import CardTerminal from '../components/sales/CardTerminal';
+import SaleReceipt from '../components/sales/SaleReceipt';
+import Modal from '../components/common/Modal';
 
 import ErrorMessage from "../components/common/ErrorMessage";
 import SuccessMessage from "../components/common/SuccessMessage";
@@ -14,6 +17,9 @@ import { createSale } from "../services/saleService";
 export default function NewSale() {
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
+  const [showTerminal, setShowTerminal] = useState(false);
+  const [lastSale, setLastSale] = useState(null);
+  const [showReceipt, setShowReceipt] = useState(false);
 
   const [search, setSearch] = useState("");
 
@@ -30,7 +36,7 @@ export default function NewSale() {
     try {
       const response = await getProducts();
 
-      setProducts(response.data);
+      setProducts(response.data.map(product => ({ ...product, stock: product.availableStock ?? product.stock })));
     } catch (error) {
       console.error(error);
 
@@ -46,7 +52,7 @@ export default function NewSale() {
       try {
         const response = await getProducts();
 
-        setProducts(response.data);
+        setProducts(response.data.map(product => ({ ...product, stock: product.availableStock ?? product.stock })));
       } catch (error) {
         console.error(error);
 
@@ -178,7 +184,7 @@ export default function NewSale() {
     setError("");
   };
 
-  const handleCompleteSale = async () => {
+  const handleCompleteSale = async (paymentId) => {
     if (cart.length === 0 || saving) {
       return;
     }
@@ -203,12 +209,15 @@ export default function NewSale() {
         })),
 
         paymentMethod,
+        paymentId: paymentMethod === 'card' ? paymentId : undefined,
 
         amountReceived:
           paymentMethod === "cash" ? numericAmountReceived : total,
       };
 
       const response = await createSale(payload);
+      setLastSale(response.data);
+      setShowTerminal(false);
 
       setCart([]);
       setPaymentMethod("cash");
@@ -218,6 +227,7 @@ export default function NewSale() {
       setSuccess(`Venta ${response.data.saleNumber} registrada correctamente.`);
 
       await loadProducts();
+      return true;
     } catch (error) {
       console.error(error);
 
@@ -226,6 +236,7 @@ export default function NewSale() {
       );
 
       await loadProducts();
+      return false;
     } finally {
       setSaving(false);
     }
@@ -261,6 +272,7 @@ export default function NewSale() {
       {success && (
         <div className="mb-6">
           <SuccessMessage message={success} onClose={() => setSuccess("")} />
+          {lastSale && <button onClick={() => setShowReceipt(true)} className="mt-3 rounded-lg border border-emerald-300 bg-white px-4 py-2 text-sm font-semibold text-emerald-700">Ver comprobante</button>}
         </div>
       )}
 
@@ -287,7 +299,7 @@ export default function NewSale() {
             onQuantityChange={handleQuantityChange}
             onRemove={handleRemove}
             total={total}
-            onCompleteSale={handleCompleteSale}
+            onCompleteSale={() => paymentMethod === 'card' ? setShowTerminal(true) : handleCompleteSale()}
             saving={saving}
             paymentMethod={paymentMethod}
             onPaymentMethodChange={handlePaymentMethodChange}
@@ -298,6 +310,8 @@ export default function NewSale() {
           />
         </div>
       )}
+      {showTerminal && <CardTerminal items={cart} total={total} onClose={() => setShowTerminal(false)} onConfirm={handleCompleteSale} />}
+      <Modal isOpen={showReceipt} onClose={() => setShowReceipt(false)} title="Comprobante de venta" size="sm">{lastSale && <SaleReceipt sale={lastSale} />}</Modal>
     </div>
   );
 }

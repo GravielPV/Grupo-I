@@ -2,9 +2,11 @@ import { Menu, UserRound } from "lucide-react";
 
 import useAuth from "../../context/useAuth";
 import { ROLE_LABELS } from "../../constants/roles";
+import usePharmacy from '../../context/usePharmacy';
 
 export default function Header({ onMenuClick }) {
   const { user } = useAuth();
+  const { pharmacies, pharmacyId, selectPharmacy, error, reloadPharmacies } = usePharmacy();
 
   return (
     <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/95 backdrop-blur">
@@ -26,6 +28,13 @@ export default function Header({ onMenuClick }) {
           </div>
         </div>
 
+        <div className="mx-3 max-w-xs">
+          <label htmlFor="active-pharmacy" className="mb-1 block text-xs text-slate-500">Farmacia activa</label>
+          <select id="active-pharmacy" value={pharmacyId} onChange={e => selectPharmacy(e.target.value)} className="max-w-full rounded-lg border border-slate-200 bg-white px-2 py-2 text-sm">
+            {pharmacies.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+          {error && <button onClick={reloadPharmacies} className="block text-xs text-red-600">{error} Reintentar</button>}
+        </div>
         {/* Derecha */}
         <div className="flex items-center gap-3">
           <div className="hidden text-right sm:block">

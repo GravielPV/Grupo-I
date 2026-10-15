@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import ProductForm from "../components/products/ProductForm";
 import Spinner from "../components/common/Spinner";
@@ -10,6 +10,7 @@ import { getCategories } from "../services/categoryService";
 
 export default function AddProduct() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -95,6 +96,7 @@ export default function AddProduct() {
           </div>
         ) : (
           <ProductForm
+            initialData={{ code: params.get('code') || '', name: params.get('name') || '', category: params.get('category') || '', imageUrl: params.get('imageUrl') || '' }}
             categories={categories}
             onSubmit={handleSubmit}
             buttonText="Guardar producto"

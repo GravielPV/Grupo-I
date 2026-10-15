@@ -10,6 +10,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
+    config.headers['X-Pharmacy-Id'] ??= localStorage.getItem('pharmacy_active') || '1';
     const token = localStorage.getItem("pharmacy_token");
 
     if (token) {
@@ -31,11 +32,14 @@ api.interceptors.response.use(
 
     const isLoginRequest = error.config?.url?.includes("/auth/login");
 
-    if (isUnauthorized && !isLoginRequest) {
+    const requestToken = error.config?.headers?.Authorization;
+    const currentToken = localStorage.getItem("pharmacy_token");
+
+    if (isUnauthorized && !isLoginRequest && currentToken && requestToken === `Bearer ${currentToken}`) {
       localStorage.removeItem("pharmacy_user");
       localStorage.removeItem("pharmacy_token");
 
-      window.location.href = "/login";
+      window.dispatchEvent(new Event("pharmacy:session-expired"));
     }
 
     return Promise.reject(error);

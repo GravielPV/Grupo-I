@@ -1,5 +1,9 @@
 import { inventoryRoutes } from './inventory-routes.js';
 import { sqliteStore } from './sqlite-store.js';
+import { commerceRoutes } from './commerce-routes.js';
+import { batchesFor } from './stock.js';
+import { generatedCode, productMetadata, publicImageRoutes, imageUploadRoutes } from './product-assets.js';
+import { belongsTo, pharmacyContext, pharmacyRoutes } from './pharmacies.js';
 import express from 'express';
 import { hashPassword, verifyPassword, newToken, tokenHash } from './security.js';
 import { ApiError, bad, object, text, userInput, productInput, id } from './validation.js';
@@ -17,12 +21,15 @@ export async function createApp({ db, store = sqliteStore(db), origins = ['http:
   const dummyHash = await hashPassword(newToken());
   const attempts = new Map();
   const today = () => businessDate(now(), timeZone);
-  const product = (row) => {
+  const product = async (row) => {
     const days = dayNumber(row.expiration_date) - dayNumber(today());
-    return { id: row.id, name: row.name, category: row.category, price: row.price_cents / 100,
-      stock: row.stock, expirationDate: row.expiration_date, createdAt: row.created_at, updatedAt: row.updated_at,
+    const batches = store.listRecords ? await store.listRecords('batches', { productId: row.id }) : [];
+    const availableStock = batches.length ? batches.filter(b => b.expirationDate >= today()).reduce((sum, b) => sum + b.stock, 0) : days >= 0 ? row.stock : 0;
+    const location = row.locationId && store.recordById ? await store.recordById('locations', row.locationId) : null;
+    return { id: row.id, _id: String(row.id), code: row.code ?? generatedCode(row.id), imageUrl: row.imageUrl ?? '', pharmacyId: row.pharmacyId ?? 1, location: location ? { id: location.id, _id: String(location.id), section: location.section, shelf: location.shelf, level: location.level } : null, name: row.name, category: row.category, price: row.price_cents / 100,
+      stock: row.stock, availableStock, expirationDate: row.expiration_date, createdAt: row.created_at, updatedAt: row.updated_at,
       lowStock: row.stock <= 5, daysUntilExpiration: days, expired: days < 0,
-      expiringSoon: days >= 0 && days < 30, availableForSale: days >= 0 && row.stock > 0 };
+      expiringSoon: days >= 0 && days < 30, availableForSale: availableStock > 0 };
   };
   app.disable('x-powered-by');
   app.use((req, res, next) => {
@@ -32,14 +39,15 @@ export async function createApp({ db, store = sqliteStore(db), origins = ['http:
     if (origin) {
       if (!origins.includes(origin)) return next(new ApiError(403, 'Origen no permitido.'));
       res.set('Access-Control-Allow-Origin', origin);
-      res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-      res.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Pharmacy-Id');
+      res.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
     }
     if (req.method === 'OPTIONS') return res.sendStatus(204);
     next();
   });
   app.use(express.json({ limit: '16kb' }));
   app.get('/api/health', async (req, res) => { await store.health(); res.json({ status: 'ok' }); });
+  if (store.listRecords) publicImageRoutes(app, store);
   app.post('/api/auth/login', async (req, res) => {
     // Limit by client IP before password hashing. Expired entries are removed and storage is bounded.
     const timestamp = now().getTime();
@@ -75,9 +83,15 @@ export async function createApp({ db, store = sqliteStore(db), origins = ['http:
     req.tokenHash = tokenHash(match[1]);
     req.user = await store.sessionUser(req.tokenHash, now().getTime());
     if (!req.user) return next(new ApiError(401, 'Sesión inválida o vencida.'));
+    if (store.listRecords) await pharmacyContext(req, store);
+    else req.pharmacyId = 1;
     next();
   });
   const admin = (req, res, next) => req.user.role === 'admin' ? next() : next(new ApiError(403, 'Se requiere el rol administrador.'));
+  if (store.listRecords) {
+    imageUploadRoutes(app, store, admin);
+    pharmacyRoutes(app, store, admin, today);
+  }
   app.get('/api/auth/me', async (req, res) => res.json(publicUser(req.user)));
   app.post('/api/auth/logout', async (req, res) => {
     await store.deleteSession(req.tokenHash);
@@ -137,8 +151,8 @@ export async function createApp({ db, store = sqliteStore(db), origins = ['http:
     for (const value of [lowStock, expiringSoon, expired]) if (value !== undefined && !['true', 'false'].includes(value)) bad('Los filtros booleanos deben ser true o false.');
     if (expiringSoon !== undefined && req.user.role !== 'admin') throw new ApiError(403, 'El filtro de próximos vencimientos es para administradores.');
     if ((search?.length ?? 0) > 120 || (category?.length ?? 0) > 80) bad('Filtro demasiado largo.');
-    let products = (await store.listProducts()).map(product);
-    if (search) products = products.filter((p) => p.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()) || p.category.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
+    let products = await Promise.all((await store.listProducts()).filter(p => belongsTo(p, req.pharmacyId)).map(product));
+    if (search) products = products.filter((p) => `${p.code} ${p.name} ${p.category}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
     if (category) products = products.filter((p) => p.category.toLocaleLowerCase() === category.trim().toLocaleLowerCase());
     for (const [field, value] of Object.entries({ lowStock, expiringSoon, expired })) {
       if (value !== undefined) products = products.filter((p) => p[field] === (value === 'true'));
@@ -146,22 +160,32 @@ export async function createApp({ db, store = sqliteStore(db), origins = ['http:
     if (expiringSoon === 'true') products.sort((a, b) => a.expirationDate.localeCompare(b.expirationDate) || a.id - b.id);
     res.json(products);
   });
-  const findProduct = async (value) => {
+  const findProduct = async (value, pharmacyId = 1) => {
     const row = await store.productById(id(value));
-    if (!row) throw new ApiError(404, 'Producto no encontrado.');
+    if (!belongsTo(row, pharmacyId)) throw new ApiError(404, 'Producto no encontrado en esta farmacia.');
     return row;
   };
-  app.get('/api/products/:id', async (req, res) => res.json(product(await findProduct(req.params.id))));
+  app.get('/api/products/:id', async (req, res) => res.json(await product(await findProduct(req.params.id, req.pharmacyId))));
+  const saveLocation = async (tx, productId, value, pharmacyId) => {
+    if (!tx.updateRecord || value === undefined) return;
+    const locationId = value === '' || value === null ? null : id(value);
+    if (locationId && !belongsTo(await tx.recordById('locations', locationId), pharmacyId)) throw new ApiError(400, 'Ubicación no válida para esta farmacia.');
+    await tx.updateRecord('products', productId, { locationId });
+  };
   app.post('/api/products', admin, async (req, res) => {
     const data = productInput(req.body, today());
     const result = await store.transaction(async (tx) => {
       if ((await tx.userRole(req.user.id))?.role !== 'admin') throw new ApiError(403, 'Se requiere el rol administrador.');
-      return tx.insertProduct(data.name, data.category, data.cents, data.stock, data.expirationDate);
+      const inserted = await tx.insertProduct(data.name, data.category, data.cents, data.stock, data.expirationDate);
+      await saveLocation(tx, inserted.lastInsertRowid, req.body.location, req.pharmacyId);
+      if (tx.listRecords) await productMetadata(tx, inserted.lastInsertRowid, req.body, req.pharmacyId);
+      if (tx.listRecords) await batchesFor(tx, await tx.productById(inserted.lastInsertRowid));
+      return inserted;
     });
-    res.status(201).location(`/api/products/${result.lastInsertRowid}`).json(product(await findProduct(String(result.lastInsertRowid))));
+    res.status(201).location(`/api/products/${result.lastInsertRowid}`).json(await product(await findProduct(String(result.lastInsertRowid), req.pharmacyId)));
   });
   app.put('/api/products/:id', admin, async (req, res) => {
-    const row = await findProduct(req.params.id);
+    const row = await findProduct(req.params.id, req.pharmacyId);
     object(req.body);
     const data = productInput({ ...req.body, stock: req.body.stock ?? row.stock }, today());
     await store.transaction(async (tx) => {
@@ -170,18 +194,28 @@ export async function createApp({ db, store = sqliteStore(db), origins = ['http:
       if (!current) throw new ApiError(404, 'Producto no encontrado.');
       if (store.listMovements && req.body.stock !== undefined && data.stock !== current.stock) throw new ApiError(409, 'Registra un movimiento para modificar el stock.');
       await tx.updateProduct(data.name, data.category, data.cents, store.listMovements ? current.stock : data.stock, data.expirationDate, row.id);
+      await saveLocation(tx, row.id, req.body.location, req.pharmacyId);
+      if (tx.listRecords) await productMetadata(tx, row.id, req.body, req.pharmacyId);
+      if (tx.listRecords && data.expirationDate !== current.expiration_date) {
+        const batches = await batchesFor(tx, current);
+        if (batches.length !== 1) throw new ApiError(409, 'El producto tiene varios lotes; conserva su fecha de referencia.');
+        await tx.updateRecord('batches', batches[0].id, { expirationDate: data.expirationDate });
+      }
     });
-    res.json(product(await findProduct(req.params.id)));
+    res.json(await product(await findProduct(req.params.id, req.pharmacyId)));
   });
   app.delete('/api/products/:id', admin, async (req, res) => {
-    const row = await findProduct(req.params.id);
+    const row = await findProduct(req.params.id, req.pharmacyId);
     await store.transaction(async (tx) => {
       if ((await tx.userRole(req.user.id))?.role !== 'admin') throw new ApiError(403, 'Se requiere el rol administrador.');
+      if (tx.listRecords && (await tx.listRecords('sales')).some(s => s.items.some(i => Number(i.product) === row.id))) throw new ApiError(409, 'El producto tiene ventas asociadas; conserva su historial.');
       await tx.deleteProduct(row.id);
+      if (tx.listRecords) for (const batch of await tx.listRecords('batches', { productId: row.id })) await tx.deleteRecord('batches', batch.id);
     });
     res.sendStatus(204);
   });
   if (store.listCategories) inventoryRoutes(app, store, admin);
+  if (store.listRecords) commerceRoutes(app, store, admin, today);
   app.use((req, res, next) => next(new ApiError(404, 'Ruta no encontrada.')));
   app.use((error, req, res, next) => {
     if (res.headersSent) return next(error);
